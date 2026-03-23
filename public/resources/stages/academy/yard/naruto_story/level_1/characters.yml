@@ -1,0 +1,13 @@
+characters:
+  naruto_spawn:
+    character: naruto_uzumaki/academy_newbie
+    q: 0
+    r: -1
+    s: 1
+    facing: front
+  iruka_spawn:
+    character: iruka_umino/part_1
+    q: 0
+    r: 1
+    s: -1
+    facing: back

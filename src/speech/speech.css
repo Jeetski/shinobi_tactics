@@ -1,0 +1,120 @@
+.speech-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 1rem 0.45rem;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.speech-bubble {
+  position: relative;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  overflow: hidden;
+  filter: drop-shadow(0 14px 20px rgba(0, 0, 0, 0.22));
+}
+
+.speech-bubble__art {
+  position: absolute;
+  display: block;
+  opacity: 0.84;
+  pointer-events: none;
+}
+
+.speech-bubble__content {
+  position: absolute;
+  color: #1d110c;
+  text-align: left;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.speech-bubble__speaker,
+.speech-bubble__text {
+  margin: 0;
+}
+
+.speech-bubble__speaker {
+  margin-bottom: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(43, 16, 8, 0.98);
+}
+
+.speech-bubble__text {
+  font-size: 0.82rem;
+  line-height: 1.26;
+  color: rgba(31, 14, 9, 0.96);
+}
+
+.speech-bubble__actions {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding-top: 0.45rem;
+}
+
+.speech-bubble__key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3.2rem;
+  padding: 0.16rem 0.48rem 0.18rem;
+  border: 1px solid rgba(58, 27, 16, 0.58);
+  border-radius: 0.32rem;
+  background: rgba(247, 233, 204, 0.54);
+  box-shadow:
+    0 1px 0 rgba(255, 252, 243, 0.32) inset,
+    0 1px 4px rgba(0, 0, 0, 0.08);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(43, 16, 8, 0.94);
+}
+
+.speech-bubble__key--primary {
+  animation: speech-enter-press 1.15s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+@keyframes speech-enter-press {
+  0% {
+    transform: translateY(0) scale(1);
+    box-shadow:
+      0 1px 0 rgba(255, 252, 243, 0.32) inset,
+      0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  35% {
+    transform: translateY(1px) scale(0.96);
+    box-shadow:
+      0 1px 0 rgba(255, 252, 243, 0.22) inset,
+      0 0 1px rgba(0, 0, 0, 0.1);
+  }
+
+  60% {
+    transform: translateY(0) scale(1);
+    box-shadow:
+      0 1px 0 rgba(255, 252, 243, 0.32) inset,
+      0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow:
+      0 1px 0 rgba(255, 252, 243, 0.32) inset,
+      0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+}

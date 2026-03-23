@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shinobi Tactics – Character Designer</title>
+<style>
+  :root{
+    --skin:#f1c27d;
+    --eye:#0000ff;
+    --mouth:#ff9999;
+    --hair1:#000000;
+    --hair2:#805515;
+    --head:64px;
+
+    /* layout + derived sizes */
+    --torso-w:calc(var(--head) * 1.6);
+    --torso-h:calc(var(--head) * 1.9);
+    --neck-w:calc(var(--head) * 0.55);
+    --neck-h:calc(var(--head) * 0.28);
+    --arm-thick:calc(var(--head) * 0.4);
+    --arm-len:calc(var(--head) * 1.5);
+    --leg-gap:calc(var(--head) * 0.2);
+    --leg-h:calc(var(--head) * 2.2);
+    --leg-w:calc((var(--torso-w) - var(--leg-gap)) / 2);
+    --hand:calc(var(--arm-thick) * 0.6);
+    --foot-h:calc(var(--head) * 0.3);
+    --foot-base:calc(var(--leg-w) * 0.65);
+    --toe-len:calc(var(--head) * 0.7);
+	--ankle-gap: calc(var(--head) * 0.3); /* space above feet for sandals */
+	--sandal-sole-h: calc(var(--foot-h) * 0.35);    /* thickness of the sole strip */
+	--sandal-toe-len: calc(var(--toe-len) * 0.75);  /* how far the sole sticks out */
+	--jacket-pad:calc(var(--head) * 0.05); /* tiny oversize all around */
+
+    /* hair drawing bounds */
+    --hair-room: calc(var(--head) * 0.8);   /* space above head */
+    --hair-side: calc(var(--head) * 0.5);   /* space to each side */
+
+    /* stage size now includes hair-room */
+    --stage-w:calc(var(--torso-w) + var(--arm-len) * 2 + var(--hand) * 2 + var(--toe-len));
+    --stage-h:calc(var(--hair-room) + var(--head) + var(--neck-h) + var(--torso-h) + var(--leg-h) + var(--foot-h));
+
+    /* push body down by hair-room */
+    --torso-top:calc(var(--hair-room) + var(--head) + var(--neck-h));
+    --arm-y:var(--torso-top);
+
+    --ear-h: calc(var(--head) * 0.22);
+
+    /* clothing */
+    --shirt:#2aa6ff;
+    --shirt-h:calc(var(--torso-h) * 0.75);
+    --pants:#3a3a8c;
+    --shorts:#3a3a8c;
+    --pants-pad:0px;
+    --shorts-pad:0px;
+    --shirt-pad:0px;
+    --shirt-sleeve-len:calc(var(--arm-len) * 0.32);
+    --jacket-user-pad:0px;
+    --jacket-sleeve-len:var(--arm-len);
+	--sandal:#2d3292; 
+	--headband:#222222;
+	--jacket:#2e3f93;             /* default jacket color */
+	--flak-jacket:#006400;      /* default flak jacket color */
+  }
+
+  *{box-sizing:border-box}
+  body{ margin:0; height:100vh; display:flex; overflow:hidden; background:#141414; color:#fff; font-family:system-ui, Arial, sans-serif; }
+  .left-panel{ flex:1; padding:24px; border-right:1px solid #2a2a2a; overflow-y:auto; height:100vh; color-scheme:dark; }
+  .left-panel::-webkit-scrollbar{ width:10px; }
+  .left-panel::-webkit-scrollbar-track{ background:#1a1a1a; }
+  .left-panel::-webkit-scrollbar-thumb{ background:#444; border-radius:5px; }
+  .left-panel::-webkit-scrollbar-thumb:hover{ background:#555; }
+  .panel{ margin-bottom:24px; border:1px solid #2a2a2a; border-radius:6px; }
+  .panel-header{ padding:10px 14px; background:#1f1f1f; cursor:pointer; font-weight:bold; font-size:15px; position:relative; }
+  .panel-header::after{ content:"▸"; position:absolute; right:12px; top:50%; transform:translateY(-50%); }
+  .panel.open .panel-header::after{ content:"▾"; }
+  .panel-content{ max-height:0; overflow:hidden; opacity:0; transition:max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease; display:grid; grid-template-columns:1fr 2fr; gap:16px 12px; background:#1a1a1a; padding:0 16px; }
+  .panel.open .panel-content{ max-height:2000px; opacity:1; padding:16px; }
+  .panel label{ font-size:14px; display:flex; align-items:center; gap:8px; }
+  .panel input[type="text"], .panel input[type="number"], .panel input[type="color"], .panel textarea, .panel select{
+    width:100%; padding:8px 10px; border:none; border-radius:6px; font-size:14px; background:#2a2a2a; color:#fff;
+  }
+  .panel textarea{ min-height:90px; resize:vertical; }
+  .panel .row{ grid-column:1 / -1; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .panel button{ background:#2e7d32; border:none; padding:8px 12px; color:#fff; border-radius:6px; cursor:pointer; font-size:14px; }
+  .panel button.secondary{ background:#424242; }
+  .panel small{ opacity:0.8; }
+  .color-display{ width:24px; height:24px; border-radius:4px; border:1px solid #444; }
+  .subsection{
+    grid-column:1 / -1;
+    border:1px solid #2f2f2f;
+    border-radius:6px;
+    background:#161616;
+  }
+  .subsection-header{
+    position:relative;
+    padding:11px 14px;
+    cursor:pointer;
+  }
+  .subsection-header::after{
+    content:"▸";
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+  }
+  .subsection.open .subsection-header::after{
+    content:"▾";
+  }
+  .subsection-title{
+    margin:0;
+    font-size:13px;
+    font-weight:700;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:#ffffff;
+  }
+  .subsection-content{
+    max-height:0;
+    overflow:hidden;
+    opacity:0;
+    padding:0 12px;
+    display:grid;
+    grid-template-columns:1fr 2fr;
+    gap:12px 12px;
+    transition:max-height 0.25s ease, opacity 0.25s ease, padding 0.25s ease;
+  }
+  .subsection.open .subsection-content{
+    max-height:1200px;
+    opacity:1;
+    padding:0 12px 14px;
+  }
+
+  .right-panel{ flex:1; display:flex; align-items:center; justify-content:center; }
+  .stage{ position:relative; width:var(--stage-w); height:var(--stage-h); outline:1px solid #2a2a2a; }
+  .part{ position:absolute; background:var(--skin); }
+
+  .skeleton-layer{
+    position:absolute;
+    inset:0;
+    display:none;
+    pointer-events:none;
+    z-index:100;
+  }
+
+  .bone{
+    position:absolute;
+    background:#c82424;
+    border-radius:999px;
+    box-shadow:0 0 0 1px rgba(38, 5, 5, 0.35);
+    transform:translate(-50%, -50%);
+  }
+
+  .bone.vertical{
+    width:8px;
+  }
+
+  .bone.horizontal{
+    height:8px;
+  }
+
+  .joint{
+    position:absolute;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    background:#ffffff;
+    border:2px solid #c82424;
+    transform:translate(-50%, -50%);
+    box-shadow:0 0 0 1px rgba(27, 10, 10, 0.35);
+  }
+
+  /* head sits lower, leaving hair-room above */
+  .head{ width:var(--head); height:var(--head); left:calc(50% - var(--head)/2); top:var(--hair-room); position:absolute; }
+  .eye{ position:absolute; width:calc(var(--head) * 0.2); height:calc(var(--head) * 0.2); top:calc(var(--head) * 0.35); background:#fff; display:flex; align-items:center; justify-content:center; }
+  .eye .pupil{ width:40%; height:40%; background:var(--eye); }
+  .eye.left{ left:calc(var(--head) * 0.2); }
+  .eye.right{ right:calc(var(--head) * 0.2); }
+
+  .ear{ position:absolute; width:calc(var(--head) * 0.10); height:calc(var(--ear-h)); background:var(--skin); top:calc(var(--head) * 0.41); }
+  .ear.left{  left:calc(var(--head) * -0.10); }
+  .ear.right{ right:calc(var(--head) * -0.10); }
+
+  .mouth{ position:absolute; width:calc(var(--head) * 0.35); height:calc(var(--head) * 0.08); background:var(--mouth); top:calc(var(--head) * 0.72); left:calc(50% - (var(--head) * 0.35)/2); }
+
+  .neck{ width:var(--neck-w); height:var(--neck-h); left:calc(50% - var(--neck-w)/2); top:calc(var(--hair-room) + var(--head)); }
+  .torso{ width:var(--torso-w); height:var(--torso-h); left:calc(50% - var(--torso-w)/2); top:var(--torso-top); }
+  .arm{ height:var(--arm-thick); top:var(--arm-y); }
+  .arm.left{ width:var(--arm-len); left:calc(50% - var(--torso-w)/2 - var(--arm-len)); }
+  .arm.right{ width:var(--arm-len); left:calc(50% + var(--torso-w)/2); }
+  .hand{ width:var(--hand); height:var(--hand); top:calc(var(--arm-y) + (var(--arm-thick) - var(--hand))/2); }
+  .hand.left{ left:calc(50% - var(--torso-w)/2 - var(--arm-len) - var(--hand)); }
+  .hand.right{ left:calc(50% + var(--torso-w)/2 + var(--arm-len)); }
+  .leg{ width:var(--leg-w); height:var(--leg-h); top:calc(var(--torso-top) + var(--torso-h)); }
+  .leg.left{ left:calc(50% - var(--torso-w)/2); }
+  .leg.right{ left:calc(50% + var(--torso-w)/2 - var(--leg-w)); }
+  .crotch-gap{ position:absolute; width:var(--leg-gap); height:calc(var(--leg-h) * 0.32); left:calc(50% - var(--leg-gap)/2); top:calc(var(--torso-top) + var(--torso-h)); }
+  .foot{ width:var(--foot-base); height:var(--foot-h); top:calc(var(--torso-top) + var(--torso-h) + var(--leg-h)); position:absolute; }
+  .foot.left{  left:calc(50% - var(--torso-w)/2 + var(--leg-w) - var(--foot-base)); }
+  .foot.right{ left:calc(50% + var(--torso-w)/2 - var(--leg-w)); }
+  .foot.left::after{ content:""; position:absolute; bottom:0; left:calc(-1 * var(--toe-len)); width:var(--toe-len); height:100%; background:var(--skin); }
+  .foot.right::after{ content:""; position:absolute; bottom:0; left:100%; width:var(--toe-len); height:100%; background:var(--skin); }
+
+  /* ===== Hair painter ===== */
+  .hair-layer{
+    position:absolute;
+    left:calc(-1 * var(--hair-side));
+    width:calc(var(--head) + var(--hair-side) * 2);
+    top:calc(-1 * var(--hair-room));
+    height:calc(var(--head) + var(--hair-room) + var(--neck-h));
+    pointer-events:none;
+    overflow:visible;
+  }
+  .hair-pixel{ position:absolute; }
+  .hair-c1{ background:var(--hair1); }
+  .hair-c2{ background:var(--hair2); }
+  .draw-cursor{ cursor:crosshair; }
+  .row.inline > * { margin-right:8px; }
+  
+  /* make the hair controls row align from the top so a vertical button stack looks neat */
+  .row.inline { align-items: flex-start; }
+
+  /* stack Clear + Add buttons vertically */
+  .btn-stack{
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-left: 8px;
+  }
+
+  /* ===== T-shirt (rectangular) ===== */
+  .shirt{
+    position:absolute;
+    left:calc(50% - var(--torso-w)/2 - var(--shirt-pad));
+    top:var(--torso-top);
+    width:calc(var(--torso-w) + var(--shirt-pad) * 2);
+    height:var(--shirt-h);
+    background:var(--shirt);
+    border-radius:0;
+    display:none;
+    z-index:10;
+  }
+  .sleeve{
+    position:absolute;
+    top:var(--torso-top);
+    width:var(--shirt-sleeve-len);
+    height:calc(var(--arm-thick));
+    background:var(--shirt);
+    border-radius:0;
+    display:none;
+    z-index:10;
+  }
+  .sleeve.left{  left:calc(50% - var(--torso-w)/2 - var(--shirt-sleeve-len)); }
+  .sleeve.right{ left:calc(50% + var(--torso-w)/2); }
+  
+  .jacket,
+  .j-sleeve,
+  .j-collar{
+    position:absolute;
+    background:var(--jacket);
+    display:none;                 /* toggled from JS */
+    z-index:20;                    /* above shirt/pants/arms */
+  }
+
+  /* Torso body of the jacket (slightly wider/taller than torso box) */
+  .jacket{
+    top:calc(var(--torso-top) - var(--jacket-pad));
+    left:calc(50% - (var(--torso-w) / 2) - var(--jacket-pad) - var(--jacket-user-pad));
+    width:calc(var(--torso-w) + (var(--jacket-pad) + var(--jacket-user-pad)) * 2);
+    height:calc(var(--torso-h) + var(--jacket-pad));
+    border-radius:0;
+  }
+
+  /* Long sleeves – cover the full arms (not hands) and a bit thicker */
+  .j-sleeve{
+    top:calc(var(--arm-y) - var(--jacket-pad) * 0.4);
+    height:calc(var(--arm-thick) * 1.1);
+    width:var(--jacket-sleeve-len);
+    border-radius:0;
+  }
+  .j-sleeve.left{
+    left:calc(50% - var(--torso-w)/2 - var(--jacket-sleeve-len));
+  }
+  .j-sleeve.right{
+    left:calc(50% + var(--torso-w)/2);
+  }
+
+  /* Optional collar – wider than the neck, same height as neck */
+  .j-collar{
+    top:calc(var(--hair-room) + var(--head));
+    left:calc(50% - (var(--neck-w) * 1.3)/2);
+    width:calc(var(--neck-w) * 1.3);
+    height:var(--neck-h);
+  }
+
+  .flak_jacket_main{
+    position:absolute;
+    top:calc(var(--torso-top) + var(--neck-h));
+    left:calc(50% - (var(--torso-w) + var(--jacket-pad) * 2) / 2);
+    width:calc(var(--torso-w) + var(--jacket-pad) * 2);
+    height:calc(var(--torso-h) - var(--neck-h));
+    background:var(--flak-jacket);
+    z-index:30;
+	display:none;
+  }
+
+  .flak_jacket_collar_l, .flak_jacket_collar_r{
+    position:absolute;
+    top:calc(var(--torso-top) - var(--neck-h) * 0.5);
+    width:calc(var(--neck-w) * 1.5);
+    height:calc(var(--neck-h) * 2);
+    background:var(--flak-jacket);
+    z-index:33;
+	display:none;
+  }
+
+  .flak_jacket_collar_l{
+    left:calc(50% - var(--neck-w) * 1.5);
+  }
+
+  .flak_jacket_collar_r{
+    right:calc(50% - var(--neck-w) * 1.5);
+  }
+
+  .flak_jacket_pocket_l, .flak_jacket_pocket_r{
+    position:absolute;
+    top:calc(var(--torso-top) + var(--neck-h) * 2);
+    width:calc(var(--torso-w) * 0.3);
+    height:calc(var(--torso-h) * 0.25);
+    background:var(--flak-jacket);
+    border:1px solid black;
+    z-index:32;
+	display:none;
+  }
+
+  .flak_jacket_pocket_l{
+    left:calc(50% - var(--torso-w) * 0.4);
+  }
+
+  .flak_jacket_pocket_r{
+    right:calc(50% - var(--torso-w) * 0.4);
+  }
+
+  .pocket_line{
+    position:absolute;
+    top:0;
+    width:1px;
+    height:100%;
+    background:black;
+  }
+
+  .pocket_line:nth-child(1){
+    left:33.33%;
+  }
+
+  .pocket_line:nth-child(2){
+    left:66.66%;
+  }
+
+  .flak_jacket_zipper{
+    position:absolute;
+    top:calc(var(--torso-top) - var(--neck-h) * 0.5);
+    left:calc(50% - var(--torso-w) * 0.1);
+    width:calc(var(--torso-w) * 0.2);
+    height:calc(var(--torso-h) + var(--neck-h) * 0.5);
+    z-index:34;
+	display:none;
+  }
+
+  .flak_jacket_zipper_line{
+    position:absolute;
+    top:0;
+    left:calc(50% - 1px);
+    width:2px;
+    height:100%;
+    background:black;
+  }
+
+  .flak_jacket_sleeve_l, .flak_jacket_sleeve_r{
+    position:absolute;
+    top:calc(var(--torso-top) - var(--arm-thick) * 0.2);
+    width:calc(var(--arm-thick) * 1.2);
+    height:calc(var(--arm-thick) * 1.2);
+    background:var(--flak-jacket);
+    z-index:35;
+	display:none;
+  }
+
+  .flak_jacket_sleeve_l{
+    left:calc(50% - var(--torso-w)/2 - var(--arm-thick) * 1.2);
+  }
+
+  .flak_jacket_sleeve_r{
+    right:calc(50% - var(--torso-w)/2 - var(--arm-thick) * 1.2);
+  }
+
+  .flak_jacket_shoulder_pad_l, .flak_jacket_shoulder_pad_r{
+    position:absolute;
+    top:calc(var(--torso-top) - var(--neck-h) * 0.5);
+    width:calc(var(--arm-thick) * 1.5);
+    height:calc(var(--arm-thick) * 1.5);
+    background:var(--flak-jacket);
+    border:1px solid black;
+    z-index:36;
+	display:none;
+  }
+
+  .flak_jacket_shoulder_pad_l{
+    left:calc(50% - var(--torso-w)/2);
+  }
+
+  .flak_jacket_shoulder_pad_r{
+    right:calc(50% - var(--torso-w)/2);
+  }
+
+  .flak_jacket_bottom_strap{
+    position:absolute;
+    top:calc(var(--torso-top) + var(--torso-h) - var(--head) * 0.3);
+    left:calc(50% - (var(--torso-w) + var(--jacket-pad) * 2) / 2);
+    width:calc(var(--torso-w) + var(--jacket-pad) * 2);
+    height:calc(var(--head) * 0.3);
+    background:var(--flak-jacket);
+    border:1px solid black;
+    z-index:31;
+	display:none;
+  }
+  
+  /* ===== Pants (long, cover legs, leave feet visible) ===== */
+	.pants{
+	position:absolute;
+	left:calc(50% - var(--torso-w)/2 - var(--pants-pad));
+	/* start right under the shirt */
+	top:calc(var(--torso-top) + var(--shirt-h));
+	width:calc(var(--torso-w) + var(--pants-pad) * 2);
+	/* fill the rest of the torso (0.25 of torso height) */
+	height:calc(var(--torso-h) - var(--shirt-h));
+	background:var(--pants);
+	display:none;
+	z-index:2;
+	}
+  .pantleg{
+    position:absolute;
+    top:calc(var(--torso-top) + var(--torso-h));
+    width:calc(var(--leg-w) + var(--pants-pad) * 2);
+    height:calc(var(--leg-h) - var(--ankle-gap));
+    background:var(--pants);
+    display:none;
+    z-index:2;
+  }
+  .pantleg.left{ left:calc(50% - var(--torso-w)/2 - var(--pants-pad)); }
+  .pantleg.right{ left:calc(50% + var(--torso-w)/2 - var(--leg-w) - var(--pants-pad)); }
+
+  /* ===== Shorts (cut off above the knees – half-leg) ===== */
+	.shorts{
+	position:absolute;
+	left:calc(50% - var(--torso-w)/2 - var(--shorts-pad));
+	top:calc(var(--torso-top) + var(--shirt-h));
+	width:calc(var(--torso-w) + var(--shorts-pad) * 2);
+	height:calc(var(--torso-h) - var(--shirt-h));
+	background:var(--shorts);
+	display:none;
+	z-index:2;
+	}
+  .shortleg{
+    position:absolute;
+    top:calc(var(--torso-top) + var(--torso-h));
+    width:calc(var(--leg-w) + var(--shorts-pad) * 2);
+    height:calc(var(--leg-h) * 0.5);
+    background:var(--shorts);
+    display:none;
+    z-index:2;
+  }
+  .shortleg.left{ left:calc(50% - var(--torso-w)/2 - var(--shorts-pad)); }
+  .shortleg.right{ left:calc(50% + var(--torso-w)/2 - var(--leg-w) - var(--shorts-pad)); }
+  /* ===== Sandals ===== */
+	.sandal{
+	position:absolute;
+	/* start at the pant hem and go down over the whole foot box */
+	top:calc(var(--torso-top) + var(--torso-h) + var(--leg-h) - var(--ankle-gap));
+	width:var(--leg-w);                                /* match leg width */
+	height:calc(var(--ankle-gap) + var(--foot-h));
+	background:var(--sandal);
+	display:none;
+	z-index:3;                                         /* above feet/pants */
+	}
+	
+	/* align exactly with each leg */
+	.sandal.left{  left:calc(50% - var(--torso-w)/2); }
+	.sandal.right{ left:calc(50% + var(--torso-w)/2 - var(--leg-w)); }
+
+	/* short toe sole under the foot */
+	.sandal.left::after{
+	content:"";
+	position:absolute;
+	bottom:0;
+	left:calc(-1 * var(--sandal-toe-len));
+	width:var(--sandal-toe-len);
+	height:var(--sandal-sole-h);
+	background:var(--sandal);
+	}
+	.sandal.right::after{
+	content:"";
+	position:absolute;
+	bottom:0;
+	left:100%;
+	width:var(--sandal-toe-len);
+	height:var(--sandal-sole-h);
+	background:var(--sandal);
+	}
+	
+	/* ===== Headband ===== */
+	.headband {
+	position: absolute;
+	left: calc(50% - var(--head)/2);
+	top: calc(var(--hair-room) + var(--head) * 0.05); /* sits above eyes */
+	width: var(--head);
+	height: calc(var(--head) * 0.25);
+	background: var(--headband);
+	display: none;
+	z-index: 3;
+	}
+
+	.headband .plate {
+	position: absolute;
+	top: 25%;
+	left: 25%;
+	width: 50%;
+	height: 60%;
+	background: #c0c0c0; /* silvery metal */
+	border: 2px solid #999;
+	border-radius: 0;
+	box-shadow: inset 0 0 0 2px rgba(255,255,255,.4); /* subtle bevel */
+	}
+ 
+</style>
+</head>
+<body>
+  <div class="left-panel">
+
+    <!-- DATA PANEL -->
+    <div class="panel">
+      <div class="panel-header">Data (Import / Export)</div>
+      <div class="panel-content">
+        <div class="row">
+          <button id="export_yaml">Export YAML</button>
+          <input id="import_file" type="file" accept=".yaml,.yml,.txt" />
+          <button id="import_file_btn" class="secondary">Import from file</button>
+          <small>Tip: Export, edit in your editor, then re-import.</small>
+        </div>
+        <label for="yaml_paste">Paste YAML</label>
+        <textarea id="yaml_paste" placeholder="id: 123
+name: &quot;Takeshi&quot;
+eyes_hex: &quot;#22aaff&quot;
+overall_scale: 72"></textarea>
+        <div class="row">
+          <button id="import_paste" class="secondary">Load from pasted YAML</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Core Identity</div>
+      <div class="panel-content">
+        <label for="id">ID</label><input type="text" id="id" placeholder="Enter id" />
+        <label for="name">Name</label><input type="text" id="name" placeholder="Enter name" />
+        <label for="nicknames">Nicknames</label><input type="text" id="nicknames" placeholder="Enter nicknames" />
+        <label for="age">Age</label><input type="number" id="age" placeholder="Enter age" />
+        <label for="sex">Sex</label>
+        <select id="sex">
+          <option value="">Select sex…</option>
+          <option>Male</option>
+          <option>Female</option>
+        </select>
+        <label for="height_cm">Height (cm)</label><input type="number" id="height_cm" placeholder="Enter height in cm" />
+        <label for="weight_kg">Weight (kg)</label><input type="number" id="weight_kg" placeholder="Enter weight in kg" />
+        <!-- Origin Village: DROPDOWN -->
+        <label for="origin_village">Origin Village</label>
+        <select id="origin_village">
+          <option value="">Select village…</option>
+          <option>Leaf</option>
+          <option>Sand</option>
+          <option>Mist</option>
+          <option>Stone</option>
+          <option>Cloud</option>
+          <option>Rain</option>
+          <option>Sound</option>
+          <option>Grass</option>
+          <option>Waterfall</option>
+          <option>Snow</option>
+          <option>Star</option>
+          <option>Whirlpool</option>
+          <option>Moon</option>
+          <option>Sky</option>
+          <option>Frost</option>
+          <option>Hot Water</option>
+          <option>River</option>
+          <option>Tea</option>
+          <option>Bird</option>
+          <option>Vegetable</option>
+          <option>Bamboo</option>
+          <option>Fang</option>
+          <option>Claw</option>
+          <option>Valley</option>
+          <option>Demon</option>
+          <option>Sea</option>
+        </select>
+        <label for="clan">Clan</label><input type="text" id="clan" placeholder="Enter clan" />
+        <!-- Rank: DROPDOWN -->
+        <label for="rank">Rank</label>
+        <select id="rank">
+          <option value="">Select rank…</option>
+          <option>Academy Student</option>
+          <option>Genin</option>
+          <option>Chunin</option>
+          <option>Jonin</option>
+          <option>Special Jonin</option>
+          <option>Elite Jonin</option>
+          <option>Anbu</option>
+          <option>Sannin</option>
+          <option>Kage</option>
+        </select>
+        <label for="affiliations">Affiliations</label><input type="text" id="affiliations" placeholder="Enter affiliations" />
+        <label for="bio_short">Short Bio</label><input type="text" id="bio_short" placeholder="Enter short bio" />
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Pose &amp; Orientation</div>
+      <div class="panel-content">
+        <label for="facing">Facing</label>
+        <select id="facing">
+          <option value="Front">Front</option>
+          <option value="Back">Back</option>
+          <option value="Left">Left</option>
+          <option value="Right">Right</option>
+        </select>
+        <label for="pose">Pose</label>
+        <select id="pose">
+          <option value="Idle">Idle</option>
+          <option value="Stance">Stance</option>
+          <option value="Sitting">Sitting</option>
+          <option value="KO">KO</option>
+          <option value="Crouch">Crouch</option>
+          <option value="Takeoff">Takeoff</option>
+          <option value="Landing">Landing</option>
+          <option value="Walk">Walk</option>
+          <option value="Run">Run</option>
+          <option value="Ninja Run">Ninja Run</option>
+        </select>
+        <small style="grid-column:1/-1;">Visual updates for different directions and poses are not yet implemented.</small>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Appearance</div>
+      <div class="panel-content">
+        <label for="skin_hex">Skin Hex</label>
+        <div class="row">
+          <input type="text" id="skin_hex" placeholder="#f1c27d" />
+          <input type="color" id="skin_color" value="#f1c27d" />
+          <div id="skin_display" class="color-display" style="background:#f1c27d;"></div>
+        </div>
+
+        <!-- Hair painter controls -->
+        <label>Hair Colors</label>
+        <div class="row">
+          <span>Hair1</span>
+          <input type="text" id="hair1_hex" placeholder="#000000" />
+          <input type="color" id="hair1_color" value="#000000" />
+          <div id="hair1_display" class="color-display" style="background:#000000;"></div>
+
+          <span style="margin-left:16px;">Hair2</span>
+          <input type="text" id="hair2_hex" placeholder="#805515" />
+          <input type="color" id="hair2_color" value="#805515" />
+          <div id="hair2_display" class="color-display" style="background:#805515;"></div>
+          </div>
+
+		<div class="row inline">
+		<input type="checkbox" id="bald" checked />
+		<label for="bald" style="margin:0;">Bald (hide hair)</label>
+	
+		<input type="checkbox" id="draw_hair" />
+		<label for="draw_hair" style="margin:0;">Draw hair</label>
+
+		<label style="margin-left:8px;">Active:</label>
+		<span id="hair_active_list"></span>
+		</div>
+
+		<!-- NEW: stack the buttons -->
+		  <div class="btn-stack">
+		    <button id="clear_hair" class="secondary" type="button">Clear hair</button>
+		    <button id="add_hair_accent" class="secondary" type="button">Add hair accent</button>
+		  </div>
+
+		<!-- NEW: dynamic extra hair colors -->
+		<div class="row" id="hair_extra_container"></div>
+
+		<label for="eyes_hex">Eyes Hex</label>
+        <div class="row">
+          <input type="text" id="eyes_hex" placeholder="#0000ff" />
+          <input type="color" id="eyes_color" value="#0000ff" />
+          <div id="eyes_display" class="color-display" style="background:#0000ff;"></div>
+        </div>
+        <label for="mouth_hex">Mouth Hex</label>
+        <div class="row">
+          <input type="text" id="mouth_hex" placeholder="#ff9999" />
+          <input type="color" id="mouth_color" value="#ff9999" />
+          <div id="mouth_display" class="color-display" style="background:#ff9999;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clothing & Gear -->
+    <div class="panel">
+      <div class="panel-header">Clothing &amp; Gear</div>
+      <div class="panel-content">
+        <div class="subsection">
+          <div class="subsection-header"><p class="subsection-title">Upper Body Base</p></div>
+          <div class="subsection-content">
+          <div class="row">
+            <label><input type="checkbox" id="wear_tshirt" /> Wear T-shirt</label>
+          </div>
+          <div class="row">
+            <span>Shirt Color</span>
+            <input type="text" id="tshirt_hex" placeholder="#2aa6ff" />
+            <input type="color" id="tshirt_color" value="#2aa6ff" />
+            <div id="tshirt_display" class="color-display" style="background:#2aa6ff;"></div>
+          </div>
+          <div class="row">
+            <span>Looseness</span>
+            <input type="number" id="shirt_loose" value="0" step="0.05" min="0" max="0.5" />
+            <span>Sleeve Length</span>
+            <input type="number" id="shirt_sleeve" value="0.32" step="0.05" min="0" max="1" />
+          </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-header"><p class="subsection-title">Outerwear</p></div>
+          <div class="subsection-content">
+		  <div class="row">
+		    <label><input type="checkbox" id="wear_jacket" /> Wear jacket</label>
+		    <label style="margin-left:12px;"><input type="checkbox" id="jacket_collar" /> Collar</label>
+		  </div>
+		  <div class="row">
+		    <span>Jacket Color</span>
+		    <input type="text" id="jacket_hex" placeholder="#2e3f93" />
+		    <input type="color" id="jacket_color" value="#2e3f93" />
+		    <div id="jacket_display" class="color-display" style="background:#2e3f93;"></div>
+		  </div>
+		  <div class="row">
+		    <span>Looseness</span>
+		    <input type="number" id="jacket_loose" value="0" step="0.05" min="0" max="0.5" />
+		    <span>Sleeve Length</span>
+		    <input type="number" id="jacket_sleeve" value="1" step="0.05" min="0" max="1" />
+		  </div>
+		  <div class="row">
+			  <label><input type="checkbox" id="wear_flak_jacket" /> Wear Flak Jacket</label>
+		  </div>
+		  <div class="row">
+			  <span>Flak Jacket Color</span>
+			  <input type="text" id="flak_jacket_hex" placeholder="#006400" />
+			  <input type="color" id="flak_jacket_color" value="#006400" />
+			  <div id="flak_jacket_display" class="color-display" style="background:#006400;"></div>
+		  </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-header"><p class="subsection-title">Legwear</p></div>
+          <div class="subsection-content">
+          <div class="row">
+            <label><input type="checkbox" id="wear_pants" /> Wear Pants</label>
+          </div>
+          <div class="row">
+            <span>Pants Color</span>
+            <input type="text" id="pants_hex" placeholder="#3a3a8c" />
+            <input type="color" id="pants_color" value="#3a3a8c" />
+            <div id="pants_display" class="color-display" style="background:#3a3a8c;"></div>
+          </div>
+          <div class="row">
+            <span>Looseness</span>
+            <input type="number" id="pants_loose" value="0" step="0.05" min="0" max="0.5" />
+          </div>
+          <div class="row">
+            <label><input type="checkbox" id="wear_shorts" /> Wear Shorts</label>
+          </div>
+          <div class="row">
+            <span>Shorts Color</span>
+            <input type="text" id="shorts_hex" placeholder="#3a3a8c" />
+            <input type="color" id="shorts_color" value="#3a3a8c" />
+            <div id="shorts_display" class="color-display" style="background:#3a3a8c;"></div>
+          </div>
+          <div class="row">
+            <span>Looseness</span>
+            <input type="number" id="shorts_loose" value="0" step="0.05" min="0" max="0.5" />
+          </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-header"><p class="subsection-title">Footwear</p></div>
+          <div class="subsection-content">
+		  <div class="row">
+		  <label><input type="checkbox" id="wear_sandals" /> Wear sandals</label>
+		  </div>
+		  <div class="row">
+		  <span>Sandals Color</span>
+		  <input type="text"  id="sandals_hex"   placeholder="#2d3292" />
+		  <input type="color" id="sandals_color" value="#2d3292" />
+		  <div id="sandals_display" class="color-display" style="background:#2d3292;"></div>
+		  </div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-header"><p class="subsection-title">Headwear</p></div>
+          <div class="subsection-content">
+		  <div class="row">
+		  <label><input type="checkbox" id="wear_headband" /> Wear Headband</label>
+		  </div>
+		  <div class="row">
+		  <span>Headband Color</span>
+		  <input type="text" id="headband_hex" placeholder="#222222" />
+		  <input type="color" id="headband_color" value="#222222" />
+		  <div id="headband_display" class="color-display" style="background:#222222;"></div>
+		  </div>
+          </div>
+        </div>
+        <small style="grid-column:1/-1;">Short sleeves auto-scale with arm size. More garments coming soon.</small>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Body Dimensions</div>
+      <div class="panel-content">
+        <label for="overall_scale">Overall Scale (head px)</label><input type="number" id="overall_scale" value="64" step="1" min="16" max="256" />
+        <label for="arm_len">Arm Length</label><input type="number" id="arm_len" value="1.5" step="0.1" />
+        <label for="torso_w">Torso Width</label><input type="number" id="torso_w" value="1.6" step="0.1" />
+        <label for="torso_h">Torso Height</label><input type="number" id="torso_h" value="1.9" step="0.1" />
+        <label for="leg_h">Leg Length</label><input type="number" id="leg_h" value="2.2" step="0.1" />
+        <label for="ear_h">Ear Height</label><input type="number" id="ear_h" value="0.22" step="0.01" />
+        <div style="grid-column:1 / -1; font-size:12px; opacity:0.8;">
+          Arm thickness is auto-derived from torso width (locked at 25% ratio).
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">Skeleton</div>
+      <div class="panel-content">
+        <div class="row">
+          <label><input type="checkbox" id="show_skeleton" /> Show bones and joints</label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel">
+    <div class="stage" id="stage" aria-label="Skin-tone mannequin in T-pose">
+      <div class="part head" id="head">
+        <div class="hair-layer" id="hair_layer"></div>
+        <div class="ear left"></div>
+        <div class="ear right"></div>
+        <div class="eye left"><div class="pupil"></div></div>
+        <div class="eye right"><div class="pupil"></div></div>
+        <div class="mouth"></div>
+      </div>
+      <div class="part neck"></div>
+	  
+      <!-- Clothing on torso/arms -->
+      <div class="shirt" id="shirt"></div>
+      <div class="sleeve left" id="sleeve_l"></div>
+      <div class="sleeve right" id="sleeve_r"></div>
+	  
+	  <!-- Jacket added -->
+	  <div class="jacket" id="jacket"></div>
+	  <div class="j-sleeve left" id="j_sleeve_l"></div>
+	  <div class="j-sleeve right" id="j_sleeve_r"></div>
+	  <div class="j-collar" id="j_collar"></div>
+
+	  <div class="flak_jacket_main" id="flak_jacket_main"></div>
+	  <div class="flak_jacket_collar_l" id="flak_jacket_collar_l"></div>
+	  <div class="flak_jacket_collar_r" id="flak_jacket_collar_r"></div>
+	  <div class="flak_jacket_pocket_l" id="flak_jacket_pocket_l">
+		<div class="pocket_line"></div>
+		<div class="pocket_line"></div>
+	  </div>
+	  <div class="flak_jacket_pocket_r" id="flak_jacket_pocket_r">
+		<div class="pocket_line"></div>
+		<div class="pocket_line"></div>
+	  </div>
+	  <div class="flak_jacket_zipper" id="flak_jacket_zipper">
+			  <div class="flak_jacket_zipper_line" id="flak_jacket_zipper_line"></div>
+			  </div>
+			  	  <div class="flak_jacket_sleeve_l" id="flak_jacket_sleeve_l"></div>
+			  	  <div class="flak_jacket_sleeve_r" id="flak_jacket_sleeve_r"></div>
+			  	  	  <div class="flak_jacket_shoulder_pad_l" id="flak_jacket_shoulder_pad_l"></div>
+			  	  	  <div class="flak_jacket_shoulder_pad_r" id="flak_jacket_shoulder_pad_r"></div>
+			  	  	  <div class="flak_jacket_bottom_strap" id="flak_jacket_bottom_strap"></div>      <!-- added: pants -->
+      <div class="pants" id="pants"></div>
+      <div class="pantleg left" id="pantleg_l"></div>
+      <div class="pantleg right" id="pantleg_r"></div>
+      <!-- shorts -->
+      <div class="shorts" id="shorts"></div>
+      <div class="shortleg left" id="shortleg_l"></div>
+      <div class="shortleg right" id="shortleg_r"></div>
+	  <!-- headband -->
+	  <div class="headband" id="headband">
+	  <div class="plate"></div>
+	  </div>
+
+      <div class="part torso"></div>
+      <div class="part arm left"></div>
+      <div class="part arm right"></div>
+      <div class="part hand left"></div>
+      <div class="part hand right"></div>
+      <div class="part leg left"></div>
+      <div class="part leg right"></div>
+      <div class="crotch-gap" aria-hidden="true"></div>
+      <div class="part foot left"></div>
+      <div class="part foot right"></div>
+	  
+	  <div class="sandal left"  id="sandal_l"></div>
+	  <div class="sandal right" id="sandal_r"></div>
+
+      <div class="skeleton-layer" id="skeleton_layer" aria-hidden="true">
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // panel toggles
+    document.querySelectorAll('.panel-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
+    document.querySelectorAll('.subsection-header').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('open')));
+
+    // Shortcuts
+    const $ = id => document.getElementById(id);
+    const skeletonDefinition = {
+      bones: [
+        {
+          id: 'head_to_neck',
+          orientation: 'vertical',
+          left: '50%',
+          top: 'calc(var(--hair-room) + var(--head) * 0.5)',
+          height: 'calc(var(--head) * 0.5)',
+        },
+        {
+          id: 'spine',
+          orientation: 'vertical',
+          left: '50%',
+          top: 'calc(var(--torso-top) + var(--torso-h) * 0.5)',
+          height: 'calc(var(--torso-h) + var(--neck-h))',
+        },
+        {
+          id: 'arm_left',
+          orientation: 'horizontal',
+          left: 'calc(50% - var(--torso-w) * 0.75)',
+          top: 'calc(var(--arm-y) + var(--arm-thick) * 0.5)',
+          width: 'calc(var(--arm-len))',
+        },
+        {
+          id: 'arm_right',
+          orientation: 'horizontal',
+          left: 'calc(50% + var(--torso-w) * 0.75)',
+          top: 'calc(var(--arm-y) + var(--arm-thick) * 0.5)',
+          width: 'calc(var(--arm-len))',
+        },
+        {
+          id: 'leg_left',
+          orientation: 'vertical',
+          left: 'calc(50% - var(--torso-w) * 0.25)',
+          top: 'calc(var(--torso-top) + var(--torso-h) + var(--leg-h) * 0.5)',
+          height: 'calc(var(--leg-h))',
+        },
+        {
+          id: 'leg_right',
+          orientation: 'vertical',
+          left: 'calc(50% + var(--torso-w) * 0.25)',
+          top: 'calc(var(--torso-top) + var(--torso-h) + var(--leg-h) * 0.5)',
+          height: 'calc(var(--leg-h))',
+        },
+        {
+          id: 'foot_left',
+          orientation: 'horizontal',
+          left: 'calc(50% - var(--torso-w) * 0.25 - var(--head) * 0.22)',
+          top: 'calc(var(--torso-top) + var(--torso-h) + var(--leg-h) + var(--foot-h) * 0.5)',
+          width: 'calc(var(--head) * 0.5)',
+        },
+        {
+          id: 'foot_right',
+          orientation: 'horizontal',
+          left: 'calc(50% + var(--torso-w) * 0.25 + var(--head) * 0.22)',
+          top: 'calc(var(--torso-top) + var(--torso-h) + var(--leg-h) + var(--foot-h) * 0.5)',
+          width: 'calc(var(--head) * 0.5)',
+        },
+      ],
+      joints: [
+        { id: 'head_center', left: '50%', top: 'calc(var(--hair-room) + var(--head) * 0.5)' },
+        { id: 'neck', left: '50%', top: 'calc(var(--hair-room) + var(--head) + var(--neck-h) * 0.5)' },
+        { id: 'shoulder_left', left: 'calc(50% - var(--torso-w) * 0.5)', top: 'calc(var(--arm-y) + var(--arm-thick) * 0.5)' },
+        { id: 'shoulder_right', left: 'calc(50% + var(--torso-w) * 0.5)', top: 'calc(var(--arm-y) + var(--arm-thick) * 0.5)' },
+        { id: 'hand_left', left: 'calc(50% - var(--torso-w) * 0.5 - var(--arm-len))', top: 'calc(var(--arm-y) + var(--arm-thick) * 0.5)' },
+        { id: 'hand_right', left: 'calc(50% + var(--torso-w) * 0.5 + var(--arm-len))', top: 'calc(var(--arm-y) + var(--arm-thick) * 0.5)' },
+        { id: 'hip_left', left: 'calc(50% - var(--torso-w) * 0.25)', top: 'calc(var(--torso-top) + var(--torso-h))' },
+        { id: 'hip_right', left: 'calc(50% + var(--torso-w) * 0.25)', top: 'calc(var(--torso-top) + var(--torso-h))' },
+        { id: 'foot_left', left: 'calc(50% - var(--torso-w) * 0.25)', top: 'calc(var(--torso-top) + var(--torso-h) + var(--leg-h))' },
+        { id: 'foot_right', left: 'calc(50% + var(--torso-w) * 0.25)', top: 'calc(var(--torso-top) + var(--torso-h) + var(--leg-h))' },
+      ],
+    };
+    const setMul = (cssVar, val) => {
+      const num = parseFloat(val);
+      if(!isFinite(num)) return;
+      document.documentElement.style.setProperty(cssVar, `calc(var(--head) * ${val})`);
+    };
+
+    // Skin color sync
+    const skinText = $('skin_hex'), skinColor = $('skin_color'), skinDisplay = $('skin_display');
+    function updateSkin(color){
+      document.documentElement.style.setProperty('--skin', color);
+      skinDisplay.style.background = color;
+      skinText.value = color; skinColor.value = color;
+    }
+    skinText.addEventListener('input', e => { const v=e.target.value; if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateSkin(v); });
+    skinColor.addEventListener('input', e => updateSkin(e.target.value));
+
+    // Hair color sync
+    const hair1Text=$('hair1_hex'), hair1Color=$('hair1_color'), hair1Display=$('hair1_display');
+    const hair2Text=$('hair2_hex'), hair2Color=$('hair2_color'), hair2Display=$('hair2_display');
+	function updateHairVar(which, color){
+	  document.documentElement.style.setProperty(which==='1'?'--hair1':'--hair2', color);
+	  (which==='1'?hair1Display:hair2Display).style.background = color;
+	  (which==='1'?hair1Text:hair2Text).value = color;
+	  (which==='1'?hair1Color:hair2Color).value = color;
+
+	  hairPalette[which==='1'?1:2] = color; // keep palette synced
+	  renderHair();
+	}
+    hair1Text.addEventListener('input', e=>{const v=e.target.value;if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateHairVar('1',v);});
+    hair1Color.addEventListener('input', e=> updateHairVar('1', e.target.value));
+    hair2Text.addEventListener('input', e=>{const v=e.target.value;if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateHairVar('2',v);});
+    hair2Color.addEventListener('input', e=> updateHairVar('2', e.target.value));
+
+	// === Hair palette (index starts at 1 to match existing hair_data indices)
+	let hairPalette = [null, hair1Color.value, hair2Color.value];
+	let activeHairIndex = 1; // default is Hair1
+	
+	const hairActiveList = $('hair_active_list');
+	const hairExtraContainer = $('hair_extra_container');
+	const addHairAccentBtn = $('add_hair_accent');
+
+	function rebuildHairActiveRadios(){
+	hairActiveList.innerHTML = '';
+		for (let i = 1; i < hairPalette.length; i++){
+			const lbl = document.createElement('label');
+			const r = document.createElement('input');
+			r.type = 'radio';
+			r.name = 'hair_pick';
+			r.value = String(i);
+			if (i === activeHairIndex) r.checked = true;
+			r.addEventListener('change', ()=> activeHairIndex = i);
+			lbl.appendChild(r);
+			lbl.appendChild(document.createTextNode(i === 1 ? ' Hair1' : i === 2 ? ' Hair2' : ` Accent${i-2}`));
+			hairActiveList.appendChild(lbl);
+		}
+	}
+
+	// small UI builder for a new accent color (text+color+swatch like Hair1/2)
+	function addAccentUI(idx, initial = '#7a4a1a'){
+	// store color
+	hairPalette[idx] = initial;
+
+	const wrap = document.createElement('div');
+	wrap.className = 'row';
+
+	const title = document.createElement('span');
+	title.textContent = `Accent${idx-2}`;
+
+	const text = document.createElement('input');
+	text.type = 'text';
+	text.placeholder = initial;
+	text.value = initial;
+
+	const color = document.createElement('input');
+	color.type = 'color';
+	color.value = initial;
+	
+	const sw = document.createElement('div');
+	sw.className = 'color-display';
+	sw.style.background = initial;
+
+	function updateAccent(col){
+		hairPalette[idx] = col;
+		sw.style.background = col;
+		text.value = col;
+		color.value = col;
+		renderHair();
+	}
+
+	text.addEventListener('input', e=>{
+		const v = e.target.value;
+		if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateAccent(v);
+	});
+	color.addEventListener('input', e=> updateAccent(e.target.value));
+
+	wrap.appendChild(title);
+	wrap.appendChild(text);
+	wrap.appendChild(color);
+	wrap.appendChild(sw);
+	hairExtraContainer.appendChild(wrap);
+	}
+
+	addHairAccentBtn.addEventListener('click', ()=>{
+	  const idx = hairPalette.length;    // next index
+	  addAccentUI(idx);
+	  rebuildHairActiveRadios();
+	});
+
+    // Eye color sync
+    const eyesText = $('eyes_hex'), eyesColor = $('eyes_color'), eyesDisplay = $('eyes_display');
+    function updateEyes(color){
+      document.documentElement.style.setProperty('--eye', color);
+      eyesDisplay.style.background = color;
+      eyesText.value = color; eyesColor.value = color;
+    }
+    eyesText.addEventListener('input', e => { const v=e.target.value; if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateEyes(v); });
+    eyesColor.addEventListener('input', e => updateEyes(e.target.value));
+
+    // Mouth color sync
+    const mouthText = $('mouth_hex'), mouthColor = $('mouth_color'), mouthDisplay = $('mouth_display');
+    function updateMouth(color){
+      document.documentElement.style.setProperty('--mouth', color);
+      mouthDisplay.style.background = color;
+      mouthText.value = color; mouthColor.value = color;
+    }
+    mouthText.addEventListener('input', e => { const v=e.target.value; if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateMouth(v); });
+    mouthColor.addEventListener('input', e => updateMouth(e.target.value));
+
+    // Body dimension wiring
+    const deriveArmThickness = () => {
+      const torsoMul = parseFloat($('torso_w').value);
+      if(!isFinite(torsoMul)) return;
+      const armMul = (torsoMul * 0.25).toFixed(3);
+      document.documentElement.style.setProperty('--arm-thick', `calc(var(--head) * ${armMul})`);
+    };
+    $('arm_len').addEventListener('input', e => setMul('--arm-len', e.target.value));
+    $('torso_w').addEventListener('input', e => { setMul('--torso-w', e.target.value); deriveArmThickness(); });
+    $('torso_h').addEventListener('input', e => setMul('--torso-h', e.target.value));
+    $('leg_h').addEventListener('input', e => setMul('--leg-h', e.target.value));
+    $('ear_h').addEventListener('input', e => {
+      const val = parseFloat(e.target.value);
+      if(!isFinite(val)) return;
+      document.documentElement.style.setProperty('--ear-h', `calc(var(--head) * ${val})`);
+    });
+
+    // Overall scale
+    const overall = $('overall_scale');
+    overall.addEventListener('input', e => {
+      const px = Math.max(16, Math.min(256, parseInt(e.target.value||64,10)));
+      document.documentElement.style.setProperty('--head', px + 'px');
+      renderHair();
+    });
+
+    // ===== Hair painter state (alignment derived from head box) =====
+    const headEl = $('head');
+    const hairLayer = $('hair_layer');
+	const stage = $('stage');
+    const skeletonLayer = $('skeleton_layer');
+    let hairData = []; // [xFrac, yFrac, colorIndex] in expanded hair box
+    const GRID_F = 0.10;
+
+    function deriveDims() {
+      const r = headEl.getBoundingClientRect();
+      const headH = r.height;
+      const headW = r.width;
+
+      const hairRoom = headH * 0.8;   // matches --hair-room
+      const hairSide = headH * 0.5;   // matches --hair-side
+      const neckH    = headH * 0.28;  // matches --neck-h
+
+      const totalW = headW + 2 * hairSide;
+      const totalH = headH + hairRoom + neckH;
+
+      const left = r.left - hairSide;
+      const top  = r.top  - hairRoom;
+
+      return { r, totalW, totalH, left, top };
+    }
+
+    function renderHair(){
+      hairLayer.innerHTML = '';
+      const { totalW, totalH } = deriveDims();
+
+      const pw = totalW * GRID_F;
+      const ph = totalH * GRID_F;
+
+      for (const [xf,yf,c] of hairData){
+        const div = document.createElement('div');
+        div.className = 'hair-pixel';
+		div.style.background = hairPalette[c] || hairPalette[1];
+        div.style.left = (xf * totalW) + 'px';
+        div.style.top  = (yf * totalH) + 'px';
+        div.style.width = pw + 'px';
+        div.style.height = ph + 'px';
+        hairLayer.appendChild(div);
+      }
+      hairLayer.style.display = $('bald').checked ? 'none' : 'block';
+    }
+
+    function addHairAt(clientX, clientY){
+      if ($('bald').checked || !$('draw_hair').checked) return;
+
+      const { totalW, totalH, left, top } = deriveDims();
+
+      if (clientX < left || clientX > left + totalW || clientY < top || clientY > top + totalH) return;
+
+      const x = clientX - left;
+      const y = clientY - top;
+
+      const gx = Math.floor(x / (totalW * GRID_F));
+      const gy = Math.floor(y / (totalH * GRID_F));
+
+      const xf = gx * GRID_F;
+      const yf = gy * GRID_F;
+
+	  const active = activeHairIndex;
+
+      const idx = hairData.findIndex(([xx,yy]) => Math.abs(xx-xf)<1e-6 && Math.abs(yy-yf)<1e-6);
+      if (idx >= 0) hairData[idx][2] = active;
+      else hairData.push([xf, yf, active]);
+
+      renderHair();
+    }
+
+    // draw interactions (on stage so we catch outside-head clicks)
+    $('draw_hair').addEventListener('change', e=>{
+      const on = e.target.checked && !$('bald').checked;
+      headEl.classList.toggle('draw-cursor', on);
+      stage.classList.toggle('draw-cursor', on);
+    });
+    $('bald').addEventListener('change', ()=>{
+      renderHair();
+      const on = $('draw_hair').checked && !$('bald').checked;
+      headEl.classList.toggle('draw-cursor', on);
+      stage.classList.toggle('draw-cursor', on);
+    });
+
+    stage.addEventListener('mousedown', e=>{
+      if (!$('draw_hair').checked || $('bald').checked) return;
+      addHairAt(e.clientX, e.clientY);
+      const move = ev => { if (ev.buttons===1) addHairAt(ev.clientX, ev.clientY); };
+      const up = ()=>{ window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); };
+      window.addEventListener('mousemove', move);
+      window.addEventListener('mouseup', up);
+    });
+
+    $('clear_hair').addEventListener('click', ()=>{ hairData = []; renderHair(); });
+    window.addEventListener('resize', renderHair);
+
+    // ===== Clothing (T-shirt) =====
+    const shirtEl = $('shirt'), sleeveL = $('sleeve_l'), sleeveR = $('sleeve_r');
+    const wearBox = $('wear_tshirt'), tshirtHex = $('tshirt_hex'), tshirtCol = $('tshirt_color'), tshirtDisp = $('tshirt_display');
+
+    function refreshShirtVisibility(){
+      const on = wearBox.checked;
+      shirtEl.style.display = on ? 'block' : 'none';
+      sleeveL.style.display = on ? 'block' : 'none';
+      sleeveR.style.display = on ? 'block' : 'none';
+    }
+    function updateShirt(color){
+      document.documentElement.style.setProperty('--shirt', color);
+      tshirtDisp.style.background = color;
+      tshirtHex.value = color;
+      tshirtCol.value = color;
+    }
+    wearBox.addEventListener('change', refreshShirtVisibility);
+    tshirtHex.addEventListener('input', e=>{ const v=e.target.value; if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateShirt(v); });
+    tshirtCol.addEventListener('input', e=> updateShirt(e.target.value));
+
+    // Shirt looseness + sleeve length
+    $('shirt_loose').addEventListener('input', e=>{
+      const v = parseFloat(e.target.value); if(!isFinite(v)) return;
+      document.documentElement.style.setProperty('--shirt-pad', `calc(var(--head) * ${v})`);
+    });
+    $('shirt_sleeve').addEventListener('input', e=>{
+      const v = parseFloat(e.target.value); if(!isFinite(v)) return;
+      document.documentElement.style.setProperty('--shirt-sleeve-len', `calc(var(--arm-len) * ${v})`);
+    });
+
+    // ===== Clothing (Pants) =====
+    const pantsEl = $('pants'), pantlegL = $('pantleg_l'), pantlegR = $('pantleg_r');
+    const wearPants = $('wear_pants'), pantsHex = $('pants_hex'), pantsCol = $('pants_color'), pantsDisp = $('pants_display');
+
+    function refreshPantsVisibility(){
+      const on = wearPants.checked;
+      pantsEl.style.display = on ? 'block' : 'none';
+      pantlegL.style.display = on ? 'block' : 'none';
+      pantlegR.style.display = on ? 'block' : 'none';
+    }
+    function updatePants(color){
+      document.documentElement.style.setProperty('--pants', color);
+      pantsDisp.style.background = color;
+      pantsHex.value = color;
+      pantsCol.value = color;
+    }
+    wearPants.addEventListener('change', refreshPantsVisibility);
+    pantsHex.addEventListener('input', e=>{ const v=e.target.value; if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updatePants(v); });
+    pantsCol.addEventListener('input', e=> updatePants(e.target.value));
+
+    // Pants looseness
+    $('pants_loose').addEventListener('input', e=>{
+      const v = parseFloat(e.target.value); if(!isFinite(v)) return;
+      document.documentElement.style.setProperty('--pants-pad', `calc(var(--head) * ${v})`);
+    });
+
+    // ===== Clothing (Shorts) =====
+    const shortsEl = $('shorts'), shortlegL = $('shortleg_l'), shortlegR = $('shortleg_r');
+    const wearShorts = $('wear_shorts'), shortsHex = $('shorts_hex'), shortsCol = $('shorts_color'), shortsDisp = $('shorts_display');
+
+    function refreshShortsVisibility(){
+      const on = wearShorts.checked;
+      shortsEl.style.display = on ? 'block' : 'none';
+      shortlegL.style.display = on ? 'block' : 'none';
+      shortlegR.style.display = on ? 'block' : 'none';
+    }
+    function updateShorts(color){
+      document.documentElement.style.setProperty('--shorts', color);
+      shortsDisp.style.background = color;
+      shortsHex.value = color;
+      shortsCol.value = color;
+    }
+    wearShorts.addEventListener('change', refreshShortsVisibility);
+    shortsHex.addEventListener('input', e=>{ const v=e.target.value; if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateShorts(v); });
+    shortsCol.addEventListener('input', e=> updateShorts(e.target.value));
+
+    // Shorts looseness
+    $('shorts_loose').addEventListener('input', e=>{
+      const v = parseFloat(e.target.value); if(!isFinite(v)) return;
+      document.documentElement.style.setProperty('--shorts-pad', `calc(var(--head) * ${v})`);
+    });
+
+	// ===== Sandals =====
+	const sandalL = $('sandal_l'), sandalR = $('sandal_r');
+	const wearSandals = $('wear_sandals');
+	const sandalsHex = $('sandals_hex'), sandalsCol = $('sandals_color'), sandalsDisp = $('sandals_display');
+	
+	function refreshSandalsVisibility(){
+	const on = wearSandals.checked;
+	sandalL.style.display = on ? 'block' : 'none';
+	sandalR.style.display = on ? 'block' : 'none';
+	}
+	function updateSandals(color){
+	document.documentElement.style.setProperty('--sandal', color);
+	sandalsDisp.style.background = color;
+	sandalsHex.value = color;
+	sandalsCol.value = color;
+	}
+
+	wearSandals.addEventListener('change', refreshSandalsVisibility);
+	sandalsHex.addEventListener('input', e=>{
+	const v = e.target.value;
+	if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateSandals(v);
+	});
+	sandalsCol.addEventListener('input', e=> updateSandals(e.target.value));
+
+	// ===== Headband =====
+	const headbandEl = $('headband'),
+		wearHeadband = $('wear_headband'),
+		hbText = $('headband_hex'),
+		hbColor = $('headband_color'),
+		hbDisplay = $('headband_display');
+
+	function refreshHeadband() {
+	headbandEl.style.display = wearHeadband.checked ? 'block' : 'none';
+	}
+
+	function updateHeadband(color) {
+	document.documentElement.style.setProperty('--headband', color);
+	hbDisplay.style.background = color;
+	hbText.value = color;
+	hbColor.value = color;
+	}
+
+
+	wearHeadband.addEventListener('change', refreshHeadband);
+	hbText.addEventListener('input', e => {
+	const v = e.target.value;
+	if (/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateHeadband(v);
+	});
+	hbColor.addEventListener('input', e => updateHeadband(e.target.value));
+
+	// ===== Jacket wiring =====
+	const jacketEl = $('jacket');
+	const jSleeveL = $('j_sleeve_l');
+	const jSleeveR = $('j_sleeve_r');
+	const jCollar  = $('j_collar');
+
+	const wearJacket   = $('wear_jacket');
+	const collarBox    = $('jacket_collar');
+	const jacketHex    = $('jacket_hex');
+	const jacketCol    = $('jacket_color');
+	const jacketDisp   = $('jacket_display');
+	
+	function refreshJacketVisibility(){
+	  const on = !!wearJacket.checked;
+	  jacketEl.style.display  = on ? 'block' : 'none';
+	  jSleeveL.style.display  = on ? 'block' : 'none';
+	  jSleeveR.style.display  = on ? 'block' : 'none';
+	  // collar is independent, but only shows when jacket is on
+	  jCollar.style.display   = (on && collarBox.checked) ? 'block' : 'none';
+	}
+
+	function updateJacketColor(color){
+	  document.documentElement.style.setProperty('--jacket', color);
+	  jacketDisp.style.background = color;
+	  jacketHex.value = color;
+	  jacketCol.value = color;
+	}
+
+	wearJacket.addEventListener('change', refreshJacketVisibility);
+	collarBox.addEventListener('change', refreshJacketVisibility);
+	jacketHex.addEventListener('input', e=>{
+	  const v = e.target.value;
+	  if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateJacketColor(v);
+	});
+	jacketCol.addEventListener('input', e=> updateJacketColor(e.target.value));
+
+    // Jacket looseness + sleeve length
+    $('jacket_loose').addEventListener('input', e=>{
+      const v = parseFloat(e.target.value); if(!isFinite(v)) return;
+      document.documentElement.style.setProperty('--jacket-user-pad', `calc(var(--head) * ${v})`);
+    });
+    $('jacket_sleeve').addEventListener('input', e=>{
+      const v = parseFloat(e.target.value); if(!isFinite(v)) return;
+      document.documentElement.style.setProperty('--jacket-sleeve-len', `calc(var(--arm-len) * ${v})`);
+    });
+    // Orientation selector placeholder
+    $('facing').addEventListener('change', e => {
+      console.log("Facing direction changed to:", e.target.value);
+      // Future implementation: trigger visual re-render for different directions
+    });
+
+    $('pose').addEventListener('change', e => {
+      console.log("Pose changed to:", e.target.value);
+      // Future implementation: trigger visual animation/pose change
+    });
+
+	// ===== Flak Jacket wiring =====
+	const flakJacketMain = $('flak_jacket_main');
+	const flakJacketCollarL = $('flak_jacket_collar_l');
+	const flakJacketCollarR = $('flak_jacket_collar_r');
+	const flakJacketPocketL = $('flak_jacket_pocket_l');
+	const flakJacketPocketR = $('flak_jacket_pocket_r');
+	const flakJacketZipper = $('flak_jacket_zipper');
+	const flakJacketSleeveL = $('flak_jacket_sleeve_l');
+	const flakJacketSleeveR = $('flak_jacket_sleeve_r');
+	const flakJacketShoulderPadL = $('flak_jacket_shoulder_pad_l');
+	const flakJacketShoulderPadR = $('flak_jacket_shoulder_pad_r');
+	const flakJacketBottomStrap = $('flak_jacket_bottom_strap');
+
+	const wearFlakJacket = $('wear_flak_jacket');
+	const flakJacketHex = $('flak_jacket_hex');
+	const flakJacketCol = $('flak_jacket_color');
+	const flakJacketDisp = $('flak_jacket_display');
+
+	function refreshFlakJacketVisibility(){
+	  const on = !!wearFlakJacket.checked;
+	  flakJacketMain.style.display = on ? 'block' : 'none';
+	  flakJacketCollarL.style.display = on ? 'block' : 'none';
+	  flakJacketCollarR.style.display = on ? 'block' : 'none';
+	  flakJacketPocketL.style.display = on ? 'block' : 'none';
+	  flakJacketPocketR.style.display = on ? 'block' : 'none';
+	  flakJacketZipper.style.display = on ? 'block' : 'none';
+	  flakJacketSleeveL.style.display = on ? 'block' : 'none';
+	  flakJacketSleeveR.style.display = on ? 'block' : 'none';
+	  flakJacketShoulderPadL.style.display = on ? 'block' : 'none';
+	  flakJacketShoulderPadR.style.display = on ? 'block' : 'none';
+	  flakJacketBottomStrap.style.display = on ? 'block' : 'none';
+	}
+
+	function updateFlakJacketColor(color){
+	  document.documentElement.style.setProperty('--flak-jacket', color);
+	  flakJacketDisp.style.background = color;
+	  flakJacketHex.value = color;
+	  flakJacketCol.value = color;
+	}
+
+	wearFlakJacket.addEventListener('change', refreshFlakJacketVisibility);
+	flakJacketHex.addEventListener('input', e=>{
+	  const v = e.target.value;
+	  if(/^#([0-9A-Fa-f]{3}){1,2}$/.test(v)) updateFlakJacketColor(v);
+	});
+	flakJacketCol.addEventListener('input', e=> updateFlakJacketColor(e.target.value));
+
+    // ===== Skeleton overlay =====
+	const showSkeleton = $('show_skeleton');
+    function renderSkeleton(){
+      skeletonLayer.innerHTML = '';
+
+      for (const bone of skeletonDefinition.bones){
+        const el = document.createElement('div');
+        el.className = `bone ${bone.orientation}`;
+        el.dataset.boneId = bone.id;
+        el.style.left = bone.left;
+        el.style.top = bone.top;
+        if (bone.width) el.style.width = bone.width;
+        if (bone.height) el.style.height = bone.height;
+        skeletonLayer.appendChild(el);
+      }
+
+      for (const joint of skeletonDefinition.joints){
+        const el = document.createElement('div');
+        el.className = 'joint';
+        el.dataset.jointId = joint.id;
+        el.style.left = joint.left;
+        el.style.top = joint.top;
+        skeletonLayer.appendChild(el);
+      }
+    }
+
+    function refreshSkeletonVisibility(){
+      skeletonLayer.style.display = showSkeleton.checked ? 'block' : 'none';
+    }
+    showSkeleton.addEventListener('change', refreshSkeletonVisibility);
+	
+	// If you want state export/import later, add fields similar to shirt/pants.
+	
+    // ===== YAML Export/Import =====
+    function collectState(){
+      return {
+        id: $('id').value || "",
+        name: $('name').value || "",
+        nicknames: $('nicknames').value || "",
+        age: $('age').value ? Number($('age').value) : "",
+        sex: $('sex').value || "",
+        height_cm: $('height_cm').value ? Number($('height_cm').value) : "",
+        weight_kg: $('weight_kg').value ? Number($('weight_kg').value) : "",
+        origin_village: $('origin_village').value || "",
+        clan: $('clan').value || "",
+        rank: $('rank').value || "",
+        affiliations: $('affiliations').value || "",
+        bio_short: $('bio_short').value || "",
+        facing: $('facing').value || "Front",
+        pose: $('pose').value || "Standing",
+        skin_hex: $('skin_hex').value || '#f1c27d',
+        hair1_hex: $('hair1_hex').value || '#000000',
+        hair2_hex: $('hair2_hex').value || '#805515',
+        bald: $('bald').checked,
+        eyes_hex: $('eyes_hex').value || '#0000ff',
+        mouth_hex: $('mouth_hex').value || '#ff9999',
+        overall_scale: $('overall_scale').value ? Number($('overall_scale').value) : 64,
+        arm_len: $('arm_len').value ? Number($('arm_len').value) : 1.5,
+        torso_w: $('torso_w').value ? Number($('torso_w').value) : 1.6,
+        torso_h: $('torso_h').value ? Number($('torso_h').value) : 1.9,
+        leg_h: $('leg_h').value ? Number($('leg_h').value) : 2.2,
+        ear_h: $('ear_h').value ? Number($('ear_h').value) : 0.22,
+        hair_data: JSON.stringify(hairData),
+        show_skeleton: showSkeleton.checked,
+        wear_tshirt: wearBox.checked,
+        tshirt_hex: tshirtHex.value || '#2aa6ff',
+        shirt_loose: $('shirt_loose').value ? Number($('shirt_loose').value) : 0,
+        shirt_sleeve: $('shirt_sleeve').value ? Number($('shirt_sleeve').value) : 0.32,
+        /* added: pants in YAML */
+        wear_pants: wearPants.checked,
+        pants_hex: pantsHex.value || '#3a3a8c',
+        pants_loose: $('pants_loose').value ? Number($('pants_loose').value) : 0,
+        wear_shorts: wearShorts.checked,
+        shorts_hex: shortsHex.value || '#3a3a8c',
+        shorts_loose: $('shorts_loose').value ? Number($('shorts_loose').value) : 0,
+		wear_headband: wearHeadband.checked,
+		headband_hex: hbText.value || '#222222',
+		wear_jacket: wearJacket.checked,
+		jacket_hex: jacketHex.value || '#2e3f93',
+		jacket_collar: collarBox.checked,
+		jacket_loose: $('jacket_loose').value ? Number($('jacket_loose').value) : 0,
+		jacket_sleeve: $('jacket_sleeve').value ? Number($('jacket_sleeve').value) : 1,
+		wear_flak_jacket: wearFlakJacket.checked,
+		flak_jacket_hex: flakJacketHex.value || '#006400',
+		wear_sandals: wearSandals.checked,
+		sandals_hex: sandalsHex.value || '#2d3292',
+		hair_accents: JSON.stringify(hairPalette.slice(3)),
+      };
+    }
+
+    function yamlEscape(str){ return String(str).replace(/"/g, '\\"'); }
+    function toYAML(obj){
+      const lines = [];
+      for (const [k,v] of Object.entries(obj)){
+        if (typeof v === 'number' || typeof v === 'boolean'){
+          lines.push(`${k}: ${v}`);
+        } else {
+          lines.push(`${k}: "${yamlEscape(v)}"`);
+        }
+      }
+      return lines.join("\n");
+    }
+    function fromYAML(yaml){
+      const out = {};
+      const lines = yaml.split(/\r?\n/);
+      for (let raw of lines){
+        const line = raw.trim();
+        if (!line || line.startsWith('#')) continue;
+        const m = /^([A-Za-z0-9_]+)\s*:\s*(.*)$/.exec(line);
+        if(!m) continue;
+        const key = m[1];
+        let val = m[2];
+
+        if (!/^"/.test(val)) { const hash = val.indexOf(' #'); if (hash >= 0) val = val.slice(0, hash).trim(); }
+
+        if (val.startsWith('"') && val.endsWith('"'))      val = val.slice(1, -1).replace(/\\"/g, '"');
+        else if (/^(true|false)$/i.test(val))              val = /^true$/i.test(val);
+        else if (!isNaN(parseFloat(val)) && isFinite(parseFloat(val))) val = parseFloat(val);
+        else                                               val = val.trim();
+
+        out[key] = val;
+      }
+      return out;
+    }
+
+    function applyState(s){
+      // core
+      if ('id' in s) $('id').value = s.id ?? "";
+      if ('name' in s) $('name').value = s.name ?? "";
+      if ('nicknames' in s) $('nicknames').value = s.nicknames ?? "";
+      if ('age' in s) $('age').value = s.age ?? "";
+      if ('sex' in s) $('sex').value = s.sex ?? "";
+      if ('height_cm' in s) $('height_cm').value = s.height_cm ?? "";
+      if ('weight_kg' in s) $('weight_kg').value = s.weight_kg ?? "";
+      if ('origin_village' in s) $('origin_village').value = s.origin_village ?? "";
+      if ('clan' in s) $('clan').value = s.clan ?? "";
+      if ('rank' in s) $('rank').value = s.rank ?? "";
+      if ('affiliations' in s) $('affiliations').value = s.affiliations ?? "";
+      if ('bio_short' in s) $('bio_short').value = s.bio_short ?? "";
+
+      // appearance
+      if ('skin_hex' in s) updateSkin(s.skin_hex);
+      if ('eyes_hex' in s) updateEyes(s.eyes_hex);
+      if ('mouth_hex' in s) updateMouth(s.mouth_hex);
+      if ('hair1_hex' in s) updateHairVar('1', s.hair1_hex || '#000000');
+      if ('hair2_hex' in s) updateHairVar('2', s.hair2_hex || '#805515');
+      if ('bald' in s) $('bald').checked = !!s.bald;
+
+      // dimensions
+      if ('overall_scale' in s){ $('overall_scale').value = s.overall_scale; document.documentElement.style.setProperty('--head', s.overall_scale + 'px'); }
+      if ('arm_len' in s){ $('arm_len').value = s.arm_len; setMul('--arm-len', s.arm_len); }
+      if ('torso_w' in s){ $('torso_w').value = s.torso_w; setMul('--torso-w', s.torso_w); }
+      if ('torso_h' in s){ $('torso_h').value = s.torso_h; setMul('--torso-h', s.torso_h); }
+      if ('leg_h' in s){ $('leg_h').value = s.leg_h; setMul('--leg-h', s.leg_h); }
+      if ('ear_h' in s){ $('ear_h').value = s.ear_h; document.documentElement.style.setProperty('--ear-h', `calc(var(--head) * ${s.ear_h})`); }
+
+      // hair pixels
+      if ('hair_data' in s){
+        try { hairData = JSON.parse(s.hair_data || '[]'); } catch { hairData = []; }
+      }
+      if ('show_skeleton' in s) showSkeleton.checked = !!s.show_skeleton;
+
+      // restore hair accent colors
+      if ('hair_accents' in s){
+        try {
+          const accents = JSON.parse(s.hair_accents || '[]');
+          hairExtraContainer.innerHTML = '';
+          hairPalette = [null, hairPalette[1], hairPalette[2]];
+          for (const col of accents){
+            const idx = hairPalette.length;
+            addAccentUI(idx, col);
+          }
+          rebuildHairActiveRadios();
+        } catch {}
+      }
+
+      // clothing
+      if ('tshirt_hex' in s) updateShirt(s.tshirt_hex || '#2aa6ff');
+      if ('wear_tshirt' in s) wearBox.checked = !!s.wear_tshirt;
+      if ('shirt_loose' in s){ $('shirt_loose').value = s.shirt_loose; document.documentElement.style.setProperty('--shirt-pad', `calc(var(--head) * ${s.shirt_loose})`); }
+      if ('shirt_sleeve' in s){ $('shirt_sleeve').value = s.shirt_sleeve; document.documentElement.style.setProperty('--shirt-sleeve-len', `calc(var(--arm-len) * ${s.shirt_sleeve})`); }
+
+      if ('pants_hex' in s) updatePants(s.pants_hex || '#3a3a8c');
+      if ('wear_pants' in s) wearPants.checked = !!s.wear_pants;
+      if ('pants_loose' in s){ $('pants_loose').value = s.pants_loose; document.documentElement.style.setProperty('--pants-pad', `calc(var(--head) * ${s.pants_loose})`); }
+
+	  if ('headband_hex' in s) updateHeadband(s.headband_hex || '#222222');
+	  if ('wear_headband' in s) wearHeadband.checked = !!s.wear_headband;
+
+
+	  if ('jacket_hex' in s) updateJacketColor(s.jacket_hex || '#2e3f93');
+	  if ('wear_jacket' in s) wearJacket.checked = !!s.wear_jacket;
+	  if ('jacket_collar' in s) collarBox.checked = !!s.jacket_collar;
+	  if ('jacket_loose' in s){ $('jacket_loose').value = s.jacket_loose; document.documentElement.style.setProperty('--jacket-user-pad', `calc(var(--head) * ${s.jacket_loose})`); }
+	  if ('jacket_sleeve' in s){ $('jacket_sleeve').value = s.jacket_sleeve; document.documentElement.style.setProperty('--jacket-sleeve-len', `calc(var(--arm-len) * ${s.jacket_sleeve})`); }
+
+	  if ('flak_jacket_hex' in s) updateFlakJacketColor(s.flak_jacket_hex || '#006400');
+	  if ('wear_flak_jacket' in s) wearFlakJacket.checked = !!s.wear_flak_jacket;
+
+	  if ('sandals_hex' in s) updateSandals(s.sandals_hex || '#2d3292');
+	  if ('wear_sandals' in s) wearSandals.checked = !!s.wear_sandals;
+
+	  if ('shorts_hex' in s) updateShorts(s.shorts_hex || '#3a3a8c');
+	  if ('wear_shorts' in s) wearShorts.checked = !!s.wear_shorts;
+	  if ('shorts_loose' in s){ $('shorts_loose').value = s.shorts_loose; document.documentElement.style.setProperty('--shorts-pad', `calc(var(--head) * ${s.shorts_loose})`); }
+
+      if ('facing' in s) $('facing').value = s.facing || "Front";
+      if ('pose' in s) $('pose').value = s.pose || "Standing";
+
+      refreshShirtVisibility();
+      refreshPantsVisibility();
+	  refreshShortsVisibility();
+	  refreshSandalsVisibility();
+	  refreshHeadband();
+	  refreshJacketVisibility();
+	  refreshFlakJacketVisibility();
+	  
+      renderHair();
+      deriveArmThickness();
+    }
+
+    // Export YAML
+    $('export_yaml').addEventListener('click', () => {
+      const yaml = toYAML(collectState());
+      const blob = new Blob([yaml], {type:'text/yaml'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'shinobi_character.yaml';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    // Import from file
+    $('import_file_btn').addEventListener('click', async () => {
+      const f = $('import_file').files && $('import_file').files[0];
+      if (!f) { alert('Choose a YAML file first.'); return; }
+      const txt = await f.text();
+      try{ applyState(fromYAML(txt)); }
+      catch(err){ console.error(err); alert('Could not parse YAML.'); }
+    });
+
+    // Import from pasted YAML
+    $('import_paste').addEventListener('click', () => {
+      const txt = $('yaml_paste').value || '';
+      try{ applyState(fromYAML(txt)); }
+      catch(err){ console.error(err); alert('Could not parse pasted YAML.'); }
+    });
+
+    // init
+    refreshShirtVisibility();
+    refreshPantsVisibility();
+    refreshShortsVisibility();
+	refreshSandalsVisibility();
+	rebuildHairActiveRadios();
+    renderHair();
+    renderSkeleton();
+    deriveArmThickness();
+    refreshSkeletonVisibility();
+  </script>
+</body>
+</html>

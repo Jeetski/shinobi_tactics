@@ -1,0 +1,8 @@
+id: dirt
+name: Dirt
+texture: dirt
+properties:
+  flammable: false
+  slippery: false
+  blocks_movement: false
+  blocks_vision: false

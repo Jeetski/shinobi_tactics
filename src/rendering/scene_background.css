@@ -1,0 +1,43 @@
+.scene-background {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.scene-background--academy_sky {
+  background:
+    linear-gradient(180deg, #dff2ff 0%, #b8dcfa 32%, #8dc1ee 66%, #70a7dc 100%);
+}
+
+.scene-background__clouds {
+  position: absolute;
+  inset: 0;
+  opacity: 0.42;
+  filter: blur(18px);
+}
+
+.scene-background__vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at center, rgba(0, 0, 0, 0) 46%, rgba(0, 0, 0, 0.14) 72%, rgba(0, 0, 0, 0.34) 100%);
+}
+
+.scene-background__clouds--far {
+  background:
+    radial-gradient(26rem 9rem at 18% 22%, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0) 62%),
+    radial-gradient(22rem 7rem at 38% 16%, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0) 60%),
+    radial-gradient(28rem 8rem at 70% 20%, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0) 60%),
+    radial-gradient(18rem 6rem at 88% 30%, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0) 60%);
+  transform: translateY(-1.5%) scale(1.05);
+}
+
+.scene-background__clouds--near {
+  opacity: 0.28;
+  filter: blur(24px);
+  background:
+    radial-gradient(32rem 10rem at 8% 42%, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0) 64%),
+    radial-gradient(22rem 7rem at 56% 36%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 62%),
+    radial-gradient(26rem 8rem at 82% 46%, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 62%);
+}

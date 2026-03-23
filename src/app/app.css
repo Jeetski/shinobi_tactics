@@ -1,0 +1,13 @@
+.app-shell {
+  min-height: 100dvh;
+  opacity: 1;
+  transition: opacity 420ms ease;
+}
+
+.app-shell.is-faded-out {
+  opacity: 0;
+}
+
+.app-shell.is-transitioning {
+  pointer-events: none;
+}

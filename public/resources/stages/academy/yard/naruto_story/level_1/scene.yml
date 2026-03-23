@@ -1,0 +1,9 @@
+id: academy_yard_naruto_story_level_1
+stage_name: Academy
+scene_name: Yard
+background:
+  preset: academy_sky
+music: /resources/music/daylight_of_konoha.mp3
+map: map.yml
+characters: characters.yml
+dialogue: dialogue/intro.yml

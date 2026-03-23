@@ -1,0 +1,7 @@
+dialogue:
+  - speaker: iruka_umino
+    text: "Naruto, today you will learn the basics."
+  - speaker: naruto_uzumaki
+    text: "Heh, I already know everything! Believe it!"
+  - speaker: iruka_umino
+    text: "Then show me. Walk over there."

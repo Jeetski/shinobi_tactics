@@ -1,0 +1,28 @@
+Original prompt: okay now, the next step is probably making a reusable loading screen. just black and showing a spinning shuriken on the bottom. It should have white text in naruto font that says Scene Name. so we can build this reusable loading screen under src/loading_screen/
+
+- Created reusable loading screen module under `src/loading_screen/`.
+- Using `straight_fuma_shuriken.png` from `public/resources/weapons/`.
+- Did a temporary live render to validate the loading screen visually, then restored `main.tsx` to the main menu.
+- Added app-level scene orchestration with fade transitions for `main_menu -> loading_screen -> naruto_story`.
+- `NARUTO` selection from `STORY -> NEW GAME` now triggers the loading screen, then lands in a placeholder Naruto story scene.
+- Added first YAML-driven map stack under `src/map_loader/` with a minimal no-dependency YAML parser, cube-coordinate hex disc generation, and SVG rendering.
+- Added first stage data at `resources/stages/academy/yard/map.yml` and first tile data at `resources/tiles/dirt.yml`, mirrored under `public/resources/`.
+- Naruto story now loads and displays the academy yard map from YAML as a radius-8 flat-top dirt hex field.
+- Added shared 2.5D projection module under `src/projection/` and switched the map view to use it instead of raw flat hex pixel math.
+- Current projection is an isometric-flavored vertical compression pass intended to be reused later by tiles, characters, props, and effects.
+- Added `src/rendering/` for visual tile treatment. Tile shadows, fake lighting gradient, edge emphasis, and tiny deterministic color variation now live there instead of inside projection.
+- Depth sorting remains in `src/projection/` and now uses a stronger sort key intended to be shared with future props/characters.
+- Introduced scene-level YAML layout under `resources/stages/academy/yard/naruto_story/level_1/` with `scene.yml`, `map.yml`, and `characters.yml`.
+- Refactored character metadata to `info.yaml` for in-verse data (`name`, `height_cm`) and `defaults.yaml` for baseline presentation (`sprite_front`, `sprite_back`) under `resources/characters/<character>/<variant>/`, mirrored under `public/resources/characters/`.
+- Added a character renderer in `src/rendering/character_rendering.tsx`, and Naruto now spawns from scene data instead of hardcoded JSX. Character billboard height is now derived from `height_cm` relative to tile size, with scene `scale` acting only as an optional multiplier.
+- Next: split stage data further as needed, add per-tile overrides/placements, and decide how elevation/props/entities sit on top of the base hex map.
+- Added scene dialogue wiring to `resources/stages/academy/yard/naruto_story/level_1/dialogue/intro.yml` and mirrored it under `public/resources/`.
+- Added the new `src/speech/` module with a simple linear state machine, typewriter text reveal, enter/click advance, and escape skip.
+- Speech bubbles are anchored above speakers from character layout head positions; collision-mask bounds are used for bubble content inset.
+- Refactored dialogue loading into `src/speech/` so the stage loader only owns the scene's `dialogue_path`; the speech module now owns fetching/parsing dialogue scripts.
+- Mirrored `resources/UI/speech/dialogue_box.png` into `public/resources/UI/speech/dialogue_box.png`.
+- Speech bubble art now uses a custom collision-mask predicate to crop out the dark square background and render only the actual scroll-box region.
+- Verified in browser: `Enter` reveals/completes text and advances, `Escape` skips the dialogue, and the first line appears above Iruka in the academy yard scene.
+- Next: if needed, add explicit per-scene dialogue sequencing/triggers so speech does not always auto-start on scene load.
+- Added a starter `docs/` folder with baseline markdown docs for overview, architecture, data layout, and scene authoring.
+- Switched repo guidance to treat `public/resources/` as the canonical asset/data location and added a root `.gitignore` that ignores the duplicate top-level `resources/` folder.

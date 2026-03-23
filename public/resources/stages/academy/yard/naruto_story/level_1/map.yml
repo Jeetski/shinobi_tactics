@@ -1,0 +1,6 @@
+id: academy_yard
+layout:
+  orientation: flat_top
+  radius: 2
+fill:
+  tile: dirt
