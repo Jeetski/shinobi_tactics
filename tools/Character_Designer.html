@@ -619,7 +619,15 @@ overall_scale: 72"></textarea>
           <option>Sannin</option>
           <option>Kage</option>
         </select>
-        <label for="affiliations">Affiliations</label><input type="text" id="affiliations" placeholder="Enter affiliations" />
+        <label for="affiliations">Affiliations</label>
+        <select id="affiliations">
+          <option value="">None</option>
+          <option>Hidden Leaf Village</option>
+          <option>Hidden Sand Village</option>
+          <option>Hidden Mist Village</option>
+          <option>Hidden Cloud Village</option>
+          <option>Hidden Stone Village</option>
+        </select>
         <label for="bio_short">Short Bio</label><input type="text" id="bio_short" placeholder="Enter short bio" />
       </div>
     </div>
@@ -654,58 +662,70 @@ overall_scale: 72"></textarea>
     <div class="panel">
       <div class="panel-header">Appearance</div>
       <div class="panel-content">
-        <label for="skin_hex">Skin Hex</label>
-        <div class="row">
-          <input type="text" id="skin_hex" placeholder="#f1c27d" />
-          <input type="color" id="skin_color" value="#f1c27d" />
-          <div id="skin_display" class="color-display" style="background:#f1c27d;"></div>
-        </div>
-
-        <!-- Hair painter controls -->
-        <label>Hair Colors</label>
-        <div class="row">
-          <span>Hair1</span>
-          <input type="text" id="hair1_hex" placeholder="#000000" />
-          <input type="color" id="hair1_color" value="#000000" />
-          <div id="hair1_display" class="color-display" style="background:#000000;"></div>
-
-          <span style="margin-left:16px;">Hair2</span>
-          <input type="text" id="hair2_hex" placeholder="#805515" />
-          <input type="color" id="hair2_color" value="#805515" />
-          <div id="hair2_display" class="color-display" style="background:#805515;"></div>
+        <div class="subsection">
+          <div class="subsection-header"><p class="subsection-title">Skin</p></div>
+          <div class="subsection-content">
+            <label for="skin_hex">Skin Hex</label>
+            <div class="row">
+              <input type="text" id="skin_hex" placeholder="#f1c27d" />
+              <input type="color" id="skin_color" value="#f1c27d" />
+              <div id="skin_display" class="color-display" style="background:#f1c27d;"></div>
+            </div>
           </div>
-
-		<div class="row inline">
-		<input type="checkbox" id="bald" checked />
-		<label for="bald" style="margin:0;">Bald (hide hair)</label>
-	
-		<input type="checkbox" id="draw_hair" />
-		<label for="draw_hair" style="margin:0;">Draw hair</label>
-
-		<label style="margin-left:8px;">Active:</label>
-		<span id="hair_active_list"></span>
-		</div>
-
-		<!-- NEW: stack the buttons -->
-		  <div class="btn-stack">
-		    <button id="clear_hair" class="secondary" type="button">Clear hair</button>
-		    <button id="add_hair_accent" class="secondary" type="button">Add hair accent</button>
-		  </div>
-
-		<!-- NEW: dynamic extra hair colors -->
-		<div class="row" id="hair_extra_container"></div>
-
-		<label for="eyes_hex">Eyes Hex</label>
-        <div class="row">
-          <input type="text" id="eyes_hex" placeholder="#0000ff" />
-          <input type="color" id="eyes_color" value="#0000ff" />
-          <div id="eyes_display" class="color-display" style="background:#0000ff;"></div>
         </div>
-        <label for="mouth_hex">Mouth Hex</label>
-        <div class="row">
-          <input type="text" id="mouth_hex" placeholder="#ff9999" />
-          <input type="color" id="mouth_color" value="#ff9999" />
-          <div id="mouth_display" class="color-display" style="background:#ff9999;"></div>
+
+        <div class="subsection">
+          <div class="subsection-header"><p class="subsection-title">Hair</p></div>
+          <div class="subsection-content">
+            <label>Hair Colors</label>
+            <div class="row">
+              <span>Hair1</span>
+              <input type="text" id="hair1_hex" placeholder="#000000" />
+              <input type="color" id="hair1_color" value="#000000" />
+              <div id="hair1_display" class="color-display" style="background:#000000;"></div>
+
+              <span style="margin-left:16px;">Hair2</span>
+              <input type="text" id="hair2_hex" placeholder="#805515" />
+              <input type="color" id="hair2_color" value="#805515" />
+              <div id="hair2_display" class="color-display" style="background:#805515;"></div>
+            </div>
+
+		    <div class="row inline">
+		    <input type="checkbox" id="bald" checked />
+		    <label for="bald" style="margin:0;">Bald (hide hair)</label>
+		
+		    <input type="checkbox" id="draw_hair" />
+		    <label for="draw_hair" style="margin:0;">Draw hair</label>
+
+		    <label style="margin-left:8px;">Active:</label>
+		    <span id="hair_active_list"></span>
+		    </div>
+
+		    <div class="btn-stack">
+		      <button id="clear_hair" class="secondary" type="button">Clear hair</button>
+		      <button id="add_hair_accent" class="secondary" type="button">Add hair accent</button>
+		    </div>
+
+		    <div class="row" id="hair_extra_container"></div>
+          </div>
+        </div>
+
+        <div class="subsection">
+          <div class="subsection-header"><p class="subsection-title">Face</p></div>
+          <div class="subsection-content">
+		    <label for="eyes_hex">Eyes Hex</label>
+            <div class="row">
+              <input type="text" id="eyes_hex" placeholder="#0000ff" />
+              <input type="color" id="eyes_color" value="#0000ff" />
+              <div id="eyes_display" class="color-display" style="background:#0000ff;"></div>
+            </div>
+            <label for="mouth_hex">Mouth Hex</label>
+            <div class="row">
+              <input type="text" id="mouth_hex" placeholder="#ff9999" />
+              <input type="color" id="mouth_color" value="#ff9999" />
+              <div id="mouth_display" class="color-display" style="background:#ff9999;"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -834,6 +854,10 @@ overall_scale: 72"></textarea>
     <div class="panel">
       <div class="panel-header">Body Dimensions</div>
       <div class="panel-content">
+        <div class="row inline" style="grid-column:1 / -1;">
+          <input type="checkbox" id="is_kid" />
+          <label for="is_kid" style="margin:0;">Kid proportions</label>
+        </div>
         <label for="overall_scale">Overall Scale (head px)</label><input type="number" id="overall_scale" value="64" step="1" min="16" max="256" />
         <label for="arm_len">Arm Length</label><input type="number" id="arm_len" value="1.5" step="0.1" />
         <label for="torso_w">Torso Width</label><input type="number" id="torso_w" value="1.6" step="0.1" />
@@ -841,7 +865,7 @@ overall_scale: 72"></textarea>
         <label for="leg_h">Leg Length</label><input type="number" id="leg_h" value="2.2" step="0.1" />
         <label for="ear_h">Ear Height</label><input type="number" id="ear_h" value="0.22" step="0.01" />
         <div style="grid-column:1 / -1; font-size:12px; opacity:0.8;">
-          Arm thickness is auto-derived from torso width (locked at 25% ratio).
+          Arm thickness is auto-derived from torso width (locked at 25% ratio). Kid mode removes one head of body height from the current proportions.
         </div>
       </div>
     </div>
@@ -1144,14 +1168,34 @@ overall_scale: 72"></textarea>
       const armMul = (torsoMul * 0.25).toFixed(3);
       document.documentElement.style.setProperty('--arm-thick', `calc(var(--head) * ${armMul})`);
     };
-    $('arm_len').addEventListener('input', e => setMul('--arm-len', e.target.value));
-    $('torso_w').addEventListener('input', e => { setMul('--torso-w', e.target.value); deriveArmThickness(); });
-    $('torso_h').addEventListener('input', e => setMul('--torso-h', e.target.value));
-    $('leg_h').addEventListener('input', e => setMul('--leg-h', e.target.value));
+    const applyBodyDimensions = () => {
+      const armLen = parseFloat($('arm_len').value || 1.5);
+      const torsoW = parseFloat($('torso_w').value || 1.6);
+      const torsoHBase = parseFloat($('torso_h').value || 1.9);
+      const legHBase = parseFloat($('leg_h').value || 2.2);
+      const isKid = $('is_kid').checked;
+
+      const torsoH = isKid ? Math.max(0.8, torsoHBase - 0.4) : torsoHBase;
+      const legH = isKid ? Math.max(0.8, legHBase - 0.6) : legHBase;
+
+      setMul('--arm-len', armLen);
+      setMul('--torso-w', torsoW);
+      setMul('--torso-h', torsoH);
+      setMul('--leg-h', legH);
+      deriveArmThickness();
+      renderHair();
+      renderSkeleton();
+    };
+    $('arm_len').addEventListener('input', applyBodyDimensions);
+    $('torso_w').addEventListener('input', applyBodyDimensions);
+    $('torso_h').addEventListener('input', applyBodyDimensions);
+    $('leg_h').addEventListener('input', applyBodyDimensions);
+    $('is_kid').addEventListener('change', applyBodyDimensions);
     $('ear_h').addEventListener('input', e => {
       const val = parseFloat(e.target.value);
       if(!isFinite(val)) return;
       document.documentElement.style.setProperty('--ear-h', `calc(var(--head) * ${val})`);
+      renderSkeleton();
     });
 
     // Overall scale
@@ -1159,7 +1203,7 @@ overall_scale: 72"></textarea>
     overall.addEventListener('input', e => {
       const px = Math.max(16, Math.min(256, parseInt(e.target.value||64,10)));
       document.documentElement.style.setProperty('--head', px + 'px');
-      renderHair();
+      applyBodyDimensions();
     });
 
     // ===== Hair painter state (alignment derived from head box) =====
@@ -1550,6 +1594,7 @@ overall_scale: 72"></textarea>
         eyes_hex: $('eyes_hex').value || '#0000ff',
         mouth_hex: $('mouth_hex').value || '#ff9999',
         overall_scale: $('overall_scale').value ? Number($('overall_scale').value) : 64,
+        is_kid: $('is_kid').checked,
         arm_len: $('arm_len').value ? Number($('arm_len').value) : 1.5,
         torso_w: $('torso_w').value ? Number($('torso_w').value) : 1.6,
         torso_h: $('torso_h').value ? Number($('torso_h').value) : 1.9,
@@ -1643,10 +1688,11 @@ overall_scale: 72"></textarea>
 
       // dimensions
       if ('overall_scale' in s){ $('overall_scale').value = s.overall_scale; document.documentElement.style.setProperty('--head', s.overall_scale + 'px'); }
-      if ('arm_len' in s){ $('arm_len').value = s.arm_len; setMul('--arm-len', s.arm_len); }
-      if ('torso_w' in s){ $('torso_w').value = s.torso_w; setMul('--torso-w', s.torso_w); }
-      if ('torso_h' in s){ $('torso_h').value = s.torso_h; setMul('--torso-h', s.torso_h); }
-      if ('leg_h' in s){ $('leg_h').value = s.leg_h; setMul('--leg-h', s.leg_h); }
+      if ('is_kid' in s) $('is_kid').checked = !!s.is_kid;
+      if ('arm_len' in s){ $('arm_len').value = s.arm_len; }
+      if ('torso_w' in s){ $('torso_w').value = s.torso_w; }
+      if ('torso_h' in s){ $('torso_h').value = s.torso_h; }
+      if ('leg_h' in s){ $('leg_h').value = s.leg_h; }
       if ('ear_h' in s){ $('ear_h').value = s.ear_h; document.documentElement.style.setProperty('--ear-h', `calc(var(--head) * ${s.ear_h})`); }
 
       // hair pixels
@@ -1711,7 +1757,7 @@ overall_scale: 72"></textarea>
 	  refreshFlakJacketVisibility();
 	  
       renderHair();
-      deriveArmThickness();
+      applyBodyDimensions();
     }
 
     // Export YAML
@@ -1750,9 +1796,7 @@ overall_scale: 72"></textarea>
     refreshShortsVisibility();
 	refreshSandalsVisibility();
 	rebuildHairActiveRadios();
-    renderHair();
-    renderSkeleton();
-    deriveArmThickness();
+    applyBodyDimensions();
     refreshSkeletonVisibility();
   </script>
 </body>
