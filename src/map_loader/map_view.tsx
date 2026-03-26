@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { loadCollisionMask, type CollisionMask } from '../lib/collision_mask';
 import type { CharacterFacing, HexCoord, LoadedStageScene } from './map_types';
 import type { PathFamily } from '../movement';
@@ -34,6 +34,9 @@ type MapViewProps = {
     s: number;
   }>;
   on_tile_click?: (coord: TileCoord) => void;
+  on_tile_hold?: (coord: TileCoord) => void;
+  on_tile_right_click?: (coord: TileCoord) => void;
+  on_tile_right_hold?: (coord: TileCoord) => void;
   on_tile_hover?: (coord: TileCoord | null) => void;
   on_tile_wheel?: (coord: TileCoord, delta_y: number) => void;
   on_tile_middle_click?: (coord: TileCoord) => void;
@@ -48,6 +51,7 @@ type MapViewProps = {
 const stage_padding_px = 18;
 const frame_padding_px = 12;
 const stroke_safe_padding = 50;
+const tile_hold_delay_ms = 220;
 
 export function MapView({
   scene,
@@ -55,6 +59,9 @@ export function MapView({
   on_advance_speech,
   highlighted_tiles = [],
   on_tile_click,
+  on_tile_hold,
+  on_tile_right_click,
+  on_tile_right_hold,
   on_tile_hover,
   on_tile_wheel,
   on_tile_middle_click,
@@ -68,6 +75,10 @@ export function MapView({
   }));
   const [character_masks, set_character_masks] = useState<Record<string, CollisionMask>>({});
   const [hovered_tile, set_hovered_tile] = useState<TileCoord | null>(null);
+  const hold_timer_ref = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const hold_fired_coord_ref = useRef<string | null>(null);
+  const right_hold_timer_ref = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+  const right_hold_fired_coord_ref = useRef<string | null>(null);
 
   useEffect(() => {
     const update_viewport_size = () => {
@@ -113,6 +124,17 @@ export function MapView({
       cancelled = true;
     };
   }, [scene.characters]);
+
+  useEffect(() => {
+    return () => {
+      if (hold_timer_ref.current !== null) {
+        window.clearTimeout(hold_timer_ref.current);
+      }
+      if (right_hold_timer_ref.current !== null) {
+        window.clearTimeout(right_hold_timer_ref.current);
+      }
+    };
+  }, []);
 
   const {
     renderables,
@@ -297,6 +319,8 @@ export function MapView({
                 on_tile_hover?.(tile.coord);
               }}
               onMouseLeave={() => {
+                clear_tile_hold_timer(hold_timer_ref);
+                clear_tile_hold_timer(right_hold_timer_ref);
                 on_tile_hover?.(null);
                 set_hovered_tile((current) =>
                   current &&
@@ -313,7 +337,27 @@ export function MapView({
                 on_tile_wheel?.(tile.coord, event.deltaY);
               }}
               onMouseDown={(event) => {
+                if (event.button === 0) {
+                  clear_tile_hold_timer(hold_timer_ref);
+                  const coord_key = `${tile.coord.q},${tile.coord.r},${tile.coord.s}`;
+                  hold_timer_ref.current = window.setTimeout(() => {
+                    hold_fired_coord_ref.current = coord_key;
+                    on_tile_hold?.(tile.coord);
+                  }, tile_hold_delay_ms);
+                  return;
+                }
+
                 if (event.button !== 1) {
+                  if (event.button === 2) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    clear_tile_hold_timer(right_hold_timer_ref);
+                    const coord_key = `${tile.coord.q},${tile.coord.r},${tile.coord.s}`;
+                    right_hold_timer_ref.current = window.setTimeout(() => {
+                      right_hold_fired_coord_ref.current = coord_key;
+                      on_tile_right_hold?.(tile.coord);
+                    }, tile_hold_delay_ms);
+                  }
                   return;
                 }
 
@@ -326,7 +370,32 @@ export function MapView({
                   event.preventDefault();
                 }
               }}
-              onClick={() => on_tile_click?.(tile.coord)}
+              onContextMenu={(event) => {
+                event.preventDefault();
+              }}
+              onMouseUp={(event) => {
+                clear_tile_hold_timer(hold_timer_ref);
+                if (event.button === 2) {
+                  const coord_key = `${tile.coord.q},${tile.coord.r},${tile.coord.s}`;
+                  const did_right_hold_fire = right_hold_fired_coord_ref.current === coord_key;
+                  clear_tile_hold_timer(right_hold_timer_ref);
+                  if (did_right_hold_fire) {
+                    right_hold_fired_coord_ref.current = null;
+                    return;
+                  }
+
+                  on_tile_right_click?.(tile.coord);
+                }
+              }}
+              onClick={() => {
+                const coord_key = `${tile.coord.q},${tile.coord.r},${tile.coord.s}`;
+                if (hold_fired_coord_ref.current === coord_key) {
+                  hold_fired_coord_ref.current = null;
+                  return;
+                }
+
+                on_tile_click?.(tile.coord);
+              }}
             />
           ))}
 
@@ -393,6 +462,13 @@ export function MapView({
       </div>
     </section>
   );
+}
+
+function clear_tile_hold_timer(timer_ref: React.MutableRefObject<ReturnType<typeof window.setTimeout> | null>) {
+  if (timer_ref.current !== null) {
+    window.clearTimeout(timer_ref.current);
+    timer_ref.current = null;
+  }
 }
 
 function min_projected_y(scene: LoadedStageScene) {

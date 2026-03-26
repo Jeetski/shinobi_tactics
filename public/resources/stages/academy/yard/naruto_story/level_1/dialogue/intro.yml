@@ -38,3 +38,30 @@ dialogue:
     text: "Heh. Fine. I'll take the long way around."
   - speaker: iruka_umino
     text: "Not the long way. The deliberate way."
+  - speaker: iruka_umino
+    text: "One more thing. If you press and hold instead of tapping, you break into a run."
+  - speaker: naruto_uzumaki
+    text: "So the path stays the same. I just cover it faster."
+  - speaker: iruka_umino
+    text: "Exactly. Hold on that tile and run it back."
+    wait: naruto_run_back_to_training_tile
+  - speaker: naruto_uzumaki
+    text: "Now you're speaking my language."
+  - speaker: iruka_umino
+    text: "Speed is useful, but control matters more. Right click, and you can jump along the same route instead of running it."
+  - speaker: naruto_uzumaki
+    text: "So I keep the path, but clear it in jumps."
+  - speaker: iruka_umino
+    text: "Exactly. Take that far tile again, and do it with a jump."
+    wait: naruto_jump_to_far_tile
+  - speaker: naruto_uzumaki
+    text: "Hah. That's more like it."
+  - speaker: iruka_umino
+    text: "And if you hold the right button instead of flicking it, you can skip the route entirely and use teleportation jutsu."
+  - speaker: naruto_uzumaki
+    text: "Hold it down, and I just vanish to the tile?"
+  - speaker: iruka_umino
+    text: "Exactly. Hold the right button and reappear on that training tile."
+    wait: naruto_teleport_to_training_tile
+  - speaker: naruto_uzumaki
+    text: "Now that is efficient."

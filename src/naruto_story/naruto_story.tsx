@@ -8,38 +8,74 @@ import { default_projection_settings, flat_top_hex_to_world, type WorldPoint } f
 import './naruto_story.css';
 
 const naruto_character_id = 'naruto_spawn';
-const hop_duration_ms = 300;
-const hop_height_world = 0.42;
 const move_wait_key = 'naruto_move_to_center_tile';
 const route_wait_key = 'naruto_route_to_training_tile';
 const wide_route_wait_key = 'naruto_wide_route_to_far_tile';
+const run_wait_key = 'naruto_run_back_to_training_tile';
+const jump_wait_key = 'naruto_jump_to_far_tile';
+const teleport_wait_key = 'naruto_teleport_to_training_tile';
 const path_families: PathFamily[] = ['short', 'wide'];
 const short_family_variants: PathVariant[] = ['shortest', 'left', 'right'];
 const wide_family_variants: PathVariant[] = ['left', 'right'];
+const walk_hop_duration_ms = 300;
+const run_hop_duration_ms = 150;
+const jump_hop_duration_ms = 210;
+const walk_hop_height_world = 0.42;
+const run_hop_height_world = 0.24;
+const jump_hop_height_world = 1.18;
+
+type MoveInputType = 'click' | 'hold' | 'right_click' | 'right_hold';
+type MoveSpeed = 'walk' | 'run' | 'jump' | 'teleport';
 
 type MovementObjective = {
   target: HexCoord;
   use_path_variants: boolean;
   required_family?: PathFamily;
   required_variants?: PathVariant[];
+  required_input?: MoveInputType;
+  move_speed?: MoveSpeed;
 };
 
 const movement_objectives: Record<string, MovementObjective> = {
   [move_wait_key]: {
     target: { q: 0, r: 0, s: 0 },
     use_path_variants: false,
+    required_input: 'click',
+    move_speed: 'walk',
   },
   [route_wait_key]: {
     target: { q: 2, r: -1, s: -1 },
     use_path_variants: true,
     required_family: 'short',
     required_variants: ['left', 'right'],
+    required_input: 'click',
+    move_speed: 'walk',
   },
   [wide_route_wait_key]: {
     target: { q: -2, r: 1, s: 1 },
     use_path_variants: true,
     required_family: 'wide',
     required_variants: ['left', 'right'],
+    required_input: 'click',
+    move_speed: 'walk',
+  },
+  [run_wait_key]: {
+    target: { q: 2, r: -1, s: -1 },
+    use_path_variants: true,
+    required_input: 'hold',
+    move_speed: 'run',
+  },
+  [jump_wait_key]: {
+    target: { q: -2, r: 1, s: 1 },
+    use_path_variants: true,
+    required_input: 'right_click',
+    move_speed: 'jump',
+  },
+  [teleport_wait_key]: {
+    target: { q: 2, r: -1, s: -1 },
+    use_path_variants: true,
+    required_input: 'right_hold',
+    move_speed: 'teleport',
   },
 };
 
@@ -239,12 +275,24 @@ export function NarutoStory() {
     return [active_objective.target];
   }, [active_objective, speech_state.is_wait_satisfied]);
 
-  const hop_along_path = (path: HexCoord[], wait_key_to_fulfill: string) => {
+  const hop_along_path = (path: HexCoord[], wait_key_to_fulfill: string, move_speed: MoveSpeed) => {
     if (!stage_scene || path.length < 2) {
       return;
     }
 
     set_is_moving_naruto(true);
+    const segment_duration_ms =
+      move_speed === 'run'
+        ? run_hop_duration_ms
+        : move_speed === 'jump'
+          ? jump_hop_duration_ms
+          : walk_hop_duration_ms;
+    const hop_height_world =
+      move_speed === 'run'
+        ? run_hop_height_world
+        : move_speed === 'jump'
+          ? jump_hop_height_world
+          : walk_hop_height_world;
 
     const step_through = (segment_index: number) => {
       const from_coord = path[segment_index];
@@ -265,7 +313,7 @@ export function NarutoStory() {
       set_naruto_facing_override(step_facing);
 
       const animate_step = (now: number) => {
-        const raw_progress = (now - start_time) / hop_duration_ms;
+        const raw_progress = (now - start_time) / segment_duration_ms;
         const progress = Math.min(1, Math.max(0, raw_progress));
         const hop_arc = Math.sin(progress * Math.PI) * hop_height_world;
 
@@ -298,13 +346,33 @@ export function NarutoStory() {
     step_through(0);
   };
 
+  const teleport_to_coord = (coord: HexCoord, wait_key_to_fulfill: string) => {
+    if (!stage_scene) {
+      return;
+    }
+
+    if (!naruto_current_coord) {
+      return;
+    }
+
+    set_is_moving_naruto(true);
+    set_naruto_facing_override(get_facing_for_step(naruto_current_coord, coord));
+    set_naruto_world_override(null);
+    set_naruto_coord_override(coord);
+
+    window.setTimeout(() => {
+      set_is_moving_naruto(false);
+      fulfill_wait(wait_key_to_fulfill);
+    }, 80);
+  };
+
   const clear_path_preview_selection = () => {
     set_hovered_destination_tile(null);
     set_active_path_family('short');
     set_active_path_variant('shortest');
   };
 
-  const handle_tile_click = (coord: HexCoord) => {
+  const attempt_move = (coord: HexCoord, input_type: MoveInputType) => {
     if (!stage_scene || !active_objective || speech_state.is_wait_satisfied || is_moving_naruto || !naruto_current_coord) {
       return;
     }
@@ -315,6 +383,30 @@ export function NarutoStory() {
       coord.s === active_objective.target.s;
 
     if (!is_target_tile) {
+      return;
+    }
+
+    const input_matches = (active_objective.required_input ?? 'click') === input_type;
+    if (!input_matches) {
+      return;
+    }
+
+    if (input_type === 'right_click' && active_objective.move_speed === 'jump') {
+      clear_path_preview_selection();
+      hop_along_path(
+        [naruto_current_coord, active_objective.target],
+        speech_state.wait_key ?? jump_wait_key,
+        'jump',
+      );
+      return;
+    }
+
+    if (input_type === 'right_hold' && active_objective.move_speed === 'teleport') {
+      clear_path_preview_selection();
+      teleport_to_coord(
+        active_objective.target,
+        speech_state.wait_key ?? teleport_wait_key,
+      );
       return;
     }
 
@@ -335,12 +427,36 @@ export function NarutoStory() {
       }
 
       clear_path_preview_selection();
-      hop_along_path(active_preview_path, speech_state.wait_key ?? route_wait_key);
+      hop_along_path(
+        active_preview_path,
+        speech_state.wait_key ?? route_wait_key,
+        active_objective.move_speed ?? 'walk',
+      );
       return;
     }
 
     clear_path_preview_selection();
-    hop_along_path([naruto_current_coord, active_objective.target], speech_state.wait_key ?? move_wait_key);
+    hop_along_path(
+      [naruto_current_coord, active_objective.target],
+      speech_state.wait_key ?? move_wait_key,
+      active_objective.move_speed ?? 'walk',
+    );
+  };
+
+  const handle_tile_click = (coord: HexCoord) => {
+    attempt_move(coord, 'click');
+  };
+
+  const handle_tile_hold = (coord: HexCoord) => {
+    attempt_move(coord, 'hold');
+  };
+
+  const handle_tile_right_click = (coord: HexCoord) => {
+    attempt_move(coord, 'right_click');
+  };
+
+  const handle_tile_right_hold = (coord: HexCoord) => {
+    attempt_move(coord, 'right_hold');
   };
 
   const handle_tile_hover = (coord: HexCoord | null) => {
@@ -443,6 +559,9 @@ export function NarutoStory() {
             on_advance_speech={advance}
             highlighted_tiles={highlighted_tiles}
             on_tile_click={handle_tile_click}
+            on_tile_hold={handle_tile_hold}
+            on_tile_right_click={handle_tile_right_click}
+            on_tile_right_hold={handle_tile_right_hold}
             on_tile_hover={handle_tile_hover}
             on_tile_wheel={handle_tile_wheel}
             on_tile_middle_click={handle_tile_middle_click}
