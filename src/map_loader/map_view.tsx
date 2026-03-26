@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { loadCollisionMask, type CollisionMask } from '../lib/collision_mask';
-import type { LoadedStageScene } from './map_types';
+import type { CharacterFacing, HexCoord, LoadedStageScene } from './map_types';
+import type { PathFamily } from '../movement';
 import {
   default_projection_settings,
   flat_top_hex_to_world,
@@ -8,8 +9,9 @@ import {
   get_perspective_scale,
   get_projected_hex_extents,
   project_world_to_screen,
+  type WorldPoint,
 } from '../projection';
-import { build_character_layout, render_projected_character, render_projected_tile, TileRenderDefs } from '../rendering';
+import { build_character_layout, render_projected_character, render_projected_path_preview, render_projected_tile, TileRenderDefs } from '../rendering';
 import { SpeechRenderer } from '../speech';
 import './map_view.css';
 
@@ -31,6 +33,16 @@ type MapViewProps = {
     r: number;
     s: number;
   }>;
+  on_tile_click?: (coord: TileCoord) => void;
+  on_tile_hover?: (coord: TileCoord | null) => void;
+  on_tile_wheel?: (coord: TileCoord, delta_y: number) => void;
+  on_tile_middle_click?: (coord: TileCoord) => void;
+  character_world_overrides?: Record<string, WorldPoint>;
+  character_facing_overrides?: Record<string, CharacterFacing>;
+  path_preview?: {
+    path: HexCoord[];
+    family?: PathFamily;
+  } | null;
 };
 
 const stage_padding_px = 18;
@@ -42,6 +54,13 @@ export function MapView({
   active_speech_line = null,
   on_advance_speech,
   highlighted_tiles = [],
+  on_tile_click,
+  on_tile_hover,
+  on_tile_wheel,
+  on_tile_middle_click,
+  character_world_overrides = {},
+  character_facing_overrides = {},
+  path_preview = null,
 }: MapViewProps) {
   const [viewport_size, set_viewport_size] = useState(() => ({
     width: window.innerWidth,
@@ -71,6 +90,8 @@ export function MapView({
           scene.characters.flatMap((character) => [
             character.defaults.sprite_front,
             character.defaults.sprite_back,
+            character.defaults.sprite_left,
+            character.defaults.sprite_right,
           ]),
         ),
       );
@@ -127,17 +148,34 @@ export function MapView({
     });
 
     const projected_characters = scene.characters.map((character) => {
-      const world_position = flat_top_hex_to_world(character.coord, default_projection_settings.tile_radius);
+      const effective_facing = character_facing_overrides[character.id] ?? character.facing;
+      const world_position =
+        character_world_overrides[character.id]
+        ?? flat_top_hex_to_world(character.coord, default_projection_settings.tile_radius);
       const screen_position = project_world_to_screen(world_position, default_projection_settings);
-      const sprite_path =
-        character.facing === 'back' ? character.defaults.sprite_back : character.defaults.sprite_front;
+      const sprite_path = (() => {
+        switch (effective_facing) {
+          case 'back':
+            return character.defaults.sprite_back;
+          case 'left':
+            return character.defaults.sprite_left;
+          case 'right':
+            return character.defaults.sprite_right;
+          case 'front':
+          default:
+            return character.defaults.sprite_front;
+        }
+      })();
       const sprite_mask = character_masks[sprite_path];
       const approximate_height =
         projected_hex_extents.max_y - projected_hex_extents.min_y;
       const perspective_scale = get_perspective_scale(screen_position.y, min_projected_y(scene), max_projected_y(scene), default_projection_settings);
 
       return {
-        character,
+        character: {
+          ...character,
+          facing: effective_facing,
+        },
         world_position,
         sprite_mask,
         speaker_key: character.defaults.id.split('/')[0],
@@ -204,7 +242,7 @@ export function MapView({
       view_box_width: max_x - min_x + stroke_safe_padding * 2,
       view_box_height: max_y - min_y + stroke_safe_padding * 2,
     };
-  }, [character_masks, highlighted_tiles, hovered_tile, scene]);
+  }, [character_facing_overrides, character_masks, character_world_overrides, highlighted_tiles, hovered_tile, scene]);
 
   const frame_width = viewport_size.width - stage_padding_px * 2;
   const frame_height = viewport_size.height - stage_padding_px * 2;
@@ -221,6 +259,9 @@ export function MapView({
           )?.info.name ?? active_speech_line.speaker,
       }
     : null;
+  const hovered_tile_label = hovered_tile
+    ? `q ${hovered_tile.q} | r ${hovered_tile.r} | s ${hovered_tile.s}`
+    : 'q -- | r -- | s --';
 
   return (
     <section className="map-view">
@@ -245,12 +286,18 @@ export function MapView({
           {scene.map.tiles.map((tile) => (
             <polygon
               key={`hit:${tile.coord.q}:${tile.coord.r}:${tile.coord.s}`}
+              data-coord={`${tile.coord.q},${tile.coord.r},${tile.coord.s}`}
+              className="tile-hit-area"
               points={get_tile_hit_points(tile.coord)}
               fill="transparent"
               stroke="none"
               pointerEvents="all"
-              onMouseEnter={() => set_hovered_tile(tile.coord)}
+              onMouseEnter={() => {
+                set_hovered_tile(tile.coord);
+                on_tile_hover?.(tile.coord);
+              }}
               onMouseLeave={() => {
+                on_tile_hover?.(null);
                 set_hovered_tile((current) =>
                   current &&
                   current.q === tile.coord.q &&
@@ -260,6 +307,26 @@ export function MapView({
                     : current,
                 );
               }}
+              onMouseMove={() => on_tile_hover?.(tile.coord)}
+              onWheel={(event) => {
+                event.preventDefault();
+                on_tile_wheel?.(tile.coord, event.deltaY);
+              }}
+              onMouseDown={(event) => {
+                if (event.button !== 1) {
+                  return;
+                }
+
+                event.preventDefault();
+                event.stopPropagation();
+                on_tile_middle_click?.(tile.coord);
+              }}
+              onAuxClick={(event) => {
+                if (event.button === 1) {
+                  event.preventDefault();
+                }
+              }}
+              onClick={() => on_tile_click?.(tile.coord)}
             />
           ))}
 
@@ -292,6 +359,16 @@ export function MapView({
               });
             }
 
+            return null;
+          })}
+
+          {path_preview ? render_projected_path_preview(path_preview) : null}
+
+          {renderables.map((renderable) => {
+            if (renderable.render_kind === 'tile') {
+              return null;
+            }
+
             return render_projected_character({
               character: renderable.character,
               world_position: renderable.world_position,
@@ -300,6 +377,10 @@ export function MapView({
             });
           })}
         </svg>
+        <div className="map-view__coord-readout" aria-live="polite">
+          <span className="map-view__coord-title">Hover Tile</span>
+          <span className="map-view__coord-value">{hovered_tile_label}</span>
+        </div>
         {active_speech_line && active_speaker_name && on_advance_speech ? (
           <div className="speech-layer">
             <SpeechRenderer

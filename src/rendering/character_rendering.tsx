@@ -21,8 +21,19 @@ export function render_projected_character({
   sprite_mask,
 }: RenderableCharacter) {
   const screen_position = project_world_to_screen(world_position, default_projection_settings);
-  const sprite_path =
-    character.facing === 'back' ? character.defaults.sprite_back : character.defaults.sprite_front;
+  const sprite_path = (() => {
+    switch (character.facing) {
+      case 'back':
+        return character.defaults.sprite_back;
+      case 'left':
+        return character.defaults.sprite_left;
+      case 'right':
+        return character.defaults.sprite_right;
+      case 'front':
+      default:
+        return character.defaults.sprite_front;
+    }
+  })();
   const layout = build_character_layout(character, screen_position, perspective_scale, sprite_mask);
 
   return (

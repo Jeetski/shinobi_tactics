@@ -1,3 +1,5 @@
 id: naruto_uzumaki/academy_newbie
-sprite_front: /resources/characters/naruto_uzumaki/academy_newbie/sprites/standing/neutral/front.png
-sprite_back: /resources/characters/naruto_uzumaki/academy_newbie/sprites/standing/neutral/back.png
+sprite_front: /resources/characters/naruto_uzumaki/academy_newbie/sprites/neutral_front.png
+sprite_back: /resources/characters/naruto_uzumaki/academy_newbie/sprites/neutral_back.png
+sprite_left: /resources/characters/naruto_uzumaki/academy_newbie/sprites/neutral_left.png
+sprite_right: /resources/characters/naruto_uzumaki/academy_newbie/sprites/neutral_right.png

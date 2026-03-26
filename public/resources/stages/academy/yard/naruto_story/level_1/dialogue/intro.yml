@@ -5,3 +5,36 @@ dialogue:
     text: "Heh, I already know everything! Believe it!"
   - speaker: iruka_umino
     text: "Then show me. Walk over there."
+    wait: naruto_move_to_center_tile
+  - speaker: iruka_umino
+    text: "Good. That is how you move across the field."
+  - speaker: naruto_uzumaki
+    text: "See? I told you I knew this already!"
+  - speaker: iruka_umino
+    text: "Then stay focused. The next lesson is harder."
+  - speaker: iruka_umino
+    text: "Look ahead, Naruto. See the line in front of you?"
+  - speaker: iruka_umino
+    text: "If you rush straight in, you will take the quickest route."
+  - speaker: iruka_umino
+    text: "Roll the wheel and you can lean that line left or right without changing where you end up."
+  - speaker: naruto_uzumaki
+    text: "Same tile. Different approach."
+  - speaker: iruka_umino
+    text: "Exactly. Take that tile again, but this time bring the line in from one side."
+    wait: naruto_route_to_training_tile
+  - speaker: iruka_umino
+    text: "Exactly. Your destination is only half the decision. Your approach is the other half."
+  - speaker: iruka_umino
+    text: "Now take your swing wider."
+  - speaker: naruto_uzumaki
+    text: "Wider? You want me to circle out before I close in?"
+  - speaker: iruka_umino
+    text: "Press the wheel down once. That changes the line from a short bend to a wide one."
+  - speaker: iruka_umino
+    text: "Then roll it again if you need to choose which side opens up. Reach that far tile with a broad approach."
+    wait: naruto_wide_route_to_far_tile
+  - speaker: naruto_uzumaki
+    text: "Heh. Fine. I'll take the long way around."
+  - speaker: iruka_umino
+    text: "Not the long way. The deliberate way."

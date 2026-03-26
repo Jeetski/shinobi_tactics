@@ -18,3 +18,35 @@
 .map-view__svg {
   display: block;
 }
+
+.map-view__coord-readout {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  gap: 2px;
+  min-width: 154px;
+  padding: 10px 12px;
+  border: 1px solid rgba(220, 243, 255, 0.26);
+  border-radius: 12px;
+  background: rgba(10, 22, 34, 0.72);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(8px);
+  pointer-events: none;
+}
+
+.map-view__coord-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(218, 236, 248, 0.76);
+}
+
+.map-view__coord-value {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(246, 252, 255, 0.96);
+}

@@ -26,3 +26,96 @@ Original prompt: okay now, the next step is probably making a reusable loading s
 - Next: if needed, add explicit per-scene dialogue sequencing/triggers so speech does not always auto-start on scene load.
 - Added a starter `docs/` folder with baseline markdown docs for overview, architecture, data layout, and scene authoring.
 - Switched repo guidance to treat `public/resources/` as the canonical asset/data location and added a root `.gitignore` that ignores the duplicate top-level `resources/` folder.
+- Refactored character rendering to use four-direction figurine assets (`front/back/left/right`) instead of only front/back standing sprites. Updated Naruto and Iruka defaults plus mirrored the new figurine PNGs into `public/resources/characters/`.
+- Added a reusable dialogue `wait` mechanism in `src/speech/` so scene scripts can block progression until a named condition is fulfilled instead of hardcoding line checks in scene components.
+- Added first reusable movement/path module under `src/movement/` with hex neighbor helpers, distance, keying, and path-variant generation for `shortest`, `left_bias`, and `right_bias`.
+- Added reusable path preview rendering under `src/rendering/path_rendering.tsx` and wired `MapView` to support tile hover, wheel-based path variant changes, exact tile hit-area targeting, path preview overlays, and character facing overrides.
+- Naruto story now has two movement tutorial beats:
+  - click the highlighted center tile to hop Naruto there
+  - hover the highlighted training tile and use mouse wheel to cycle path variants before clicking to move
+- Multi-hop figurine movement now updates Naruto's facing by step direction and fulfills dialogue waits on success.
+- Added route-tutorial dialogue lines and waits in `resources/stages/academy/yard/naruto_story/level_1/dialogue/intro.yml` and the mirrored `public/resources/...` copy.
+- Verified the route mechanic in-browser with Playwright screenshots:
+  - `output/playwright/path_tutorial_v3/02_route_shortest.png`
+  - `output/playwright/path_tutorial_v3/03_route_left_bias.png`
+  - `output/playwright/path_tutorial_v3/04_route_right_bias.png`
+  - `output/playwright/path_tutorial_v3/05_after_route_move.png`
+- Note: the `$WEB_GAME_CLIENT` skill script could not be used directly because its ESM package resolution did not find the project's local `playwright` install from the skill directory. Used a local inline Playwright script from the repo instead for verification.
+- Reworked the route system around `family + variant` instead of a single flattened style list:
+  - families: `short`, `wide`
+  - variants inside each family: `shortest`, `left`, `right`
+- Default hover/click behavior now always uses `short + shortest`, so plain click still means the canonical shortest route.
+- Mouse wheel now cycles variants within the active family, and middle mouse click toggles the active family between `short` and `wide`.
+- Replaced the broken wide-arc path logic with a control-point-inspired waypoint scoring approach:
+  - score candidate waypoint hexes on the requested side of the line
+  - bias them toward a proportional control point
+  - prefer a detour length target based on family (`short` vs `wide`)
+  - stitch the final route as shortest-path segments through the chosen waypoint
+- Updated Iruka's dialogue so he currently teaches only:
+  - default shortest click
+  - mouse-wheel short left/right arcs
+  Wide-family switching exists already via middle click but is not tutorialized yet.
+- Verified the new family behavior in-browser with Playwright screenshots:
+  - `output/playwright/path_family_v3/01_shortest.png`
+  - `output/playwright/path_family_v3/02_short_left.png`
+  - `output/playwright/path_family_v3/03_wide_left.png`
+  - `output/playwright/path_family_v3/04_after_move.png`
+- Added a top-right hover coordinate readout in `src/map_loader/map_view.tsx` / `src/map_loader/map_view.css` showing the currently hovered tile as `q | r | s`.
+- Verified the coordinate overlay in-browser with:
+  - `output/playwright/hover_qrs_overlay.png`
+- This is meant to support route-design discussion so exact desired arc paths can be described tile-by-tile before refining the math again.
+- Replaced the previous control-point route-family logic with a discrete one-bend path picker in `src/movement/hex_paths.ts`:
+  - enumerate valid two-leg paths from all direction-pair combinations
+  - classify them as `left` / `right` by bend side
+  - `short` family picks the shortest one-bend path on that side
+  - `wide` family picks the next longer one-bend path on that side
+  - default `shortest` still uses the canonical shortest-path search
+- Corrected the left/right side naming to match the user's coordinate examples:
+  - for `q2r-1s-1 -> q-2r1s1`, `short left` now resolves to `q1r0s-1 -> q0r1s-1 -> q-1r1s0 -> destination`
+  - `short right` resolves to `q1r-1s0 -> q0r-1s1 -> q-1r0s1 -> destination`
+- Verified the new route-family visuals in-browser with:
+  - `output/playwright/path_family_v4/01_shortest.png`
+  - `output/playwright/path_family_v4/02_short_left.png`
+  - `output/playwright/path_family_v4/03_short_right.png`
+  - `output/playwright/path_family_v4/04_wide_right.png`
+  - `output/playwright/path_family_v4/05_wide_left.png`
+- Refined the route system again toward the agreed bend-point model:
+  - `wide` family now selects a bend tile from a relative-space formula (`A -> C -> B`) using midpoint + left/right normal + distance-scaled offset
+  - `short` family intentionally stays stricter and uses exact one-bend candidates, because that matches the user's coordinate examples better than the formula-only version
+  - default shortest remains the canonical direct route
+- Added the next in-character dialogue beat for wide approaches in:
+  - `resources/stages/academy/yard/naruto_story/level_1/dialogue/intro.yml`
+  - mirrored `public/resources/.../intro.yml`
+- The short and wide route waits now enforce the intended route family before movement is accepted:
+  - short lesson requires `short + left/right`
+  - wide lesson requires `wide + left/right`
+- Verified the full flow in-browser with:
+  - `output/playwright/path_family_v5/01_short_wrong_click.png`
+  - `output/playwright/path_family_v5/02_short_left_preview.png`
+  - `output/playwright/path_family_v5/04_wide_wrong_click.png`
+  - `output/playwright/path_family_v5/05_wide_left_preview.png`
+  - `output/playwright/path_family_v5/06_after_wide_move.png`
+- Reworked wide-arc routing again after the user rejected the boxy/U-shaped preview:
+  - removed any practical `wide + shortest` route selection; the wide family now only cycles `left/right`
+  - kept `short` family behavior as the strict one-bend shortest-side routes
+  - changed `wide` family selection to choose among legal one-bend hex candidates using a broad ideal bend point, desired extra-step budget, and side-specific scoring
+- Corrected a bad follow-up interpretation:
+  - the user does not want curved SVG preview lines
+  - wide arcs should be wider tile routes, still rendered as straight segment chains
+  - updated the wide-family scoring so it must choose a bend farther from the direct line than the short family
+  - removed the temporary smooth-curve SVG rendering and went back to straight segment preview lines
+- Reworked one-bend candidate generation around explicit hex radials instead of direction-pair enumeration:
+  - a bend is now computed as the intersection of one radial from the start tile and one radial from the goal tile
+  - short left/right choose the shortest valid side-specific bend
+  - wide left/right now reuse the same start-side radial as the short bend and choose the farther bend on that radial
+- The user clarified the intended wide behavior more simply:
+  - move one tile outward to the chosen side
+  - trace a short arc between the offset start and offset destination
+  - move one tile inward to the real destination
+- Updated wide-family generation to use that offset-short-arc model instead of the previous radial-only wide bend selection.
+- Sample routes after the offset-wide rewrite:
+  - `q2 r-1 s-1 -> q-2 r1 s1`
+    - short left: `q1 r0 s-1 -> q0 r1 s-1 -> q-1 r1 s0 -> destination`
+    - wide left: `q2 r0 s-2 -> q1 r1 s-2 -> q0 r2 s-2 -> q-1 r2 s-1 -> q-2 r2 s0 -> destination`
+    - short right: `q1 r-1 s0 -> q0 r-1 s1 -> q-1 r0 s1 -> destination`
+    - wide right: `q2 r-2 s0 -> q1 r-2 s1 -> q0 r-2 s2 -> q-1 r-1 s2 -> q-2 r0 s2 -> destination`

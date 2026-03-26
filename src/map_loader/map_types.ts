@@ -1,5 +1,5 @@
 export type HexOrientation = 'flat_top';
-export type CharacterFacing = 'front' | 'back';
+export type CharacterFacing = 'front' | 'back' | 'left' | 'right';
 
 export type HexCoord = {
   q: number;
@@ -62,6 +62,8 @@ export type CharacterDefaults = {
   id: string;
   sprite_front: string;
   sprite_back: string;
+  sprite_left: string;
+  sprite_right: string;
 };
 
 export type CharacterInfo = {
