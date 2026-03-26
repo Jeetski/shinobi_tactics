@@ -2,7 +2,7 @@ dialogue:
   - speaker: iruka_umino
     text: "Naruto, today you will learn the basics."
   - speaker: naruto_uzumaki
-    text: "Heh, I already know everything! Believe it!"
+    text: "Heh, I already know **everything**! *Believe it!*"
   - speaker: iruka_umino
     text: "Then show me. Walk over there."
     wait: naruto_move_to_center_tile
@@ -15,11 +15,11 @@ dialogue:
   - speaker: iruka_umino
     text: "Look ahead, Naruto. See the line in front of you?"
   - speaker: iruka_umino
-    text: "If you rush straight in, you will take the quickest route."
+    text: "If you rush straight in, you will take the **quickest** route."
   - speaker: iruka_umino
-    text: "Roll the wheel and you can lean that line left or right without changing where you end up."
+    text: "Roll the wheel and you can lean that line `left` or `right` without changing where you end up."
   - speaker: naruto_uzumaki
-    text: "Same tile. Different approach."
+    text: "Same tile. **Different approach.**"
   - speaker: iruka_umino
     text: "Exactly. Take that tile again, but this time bring the line in from one side."
     wait: naruto_route_to_training_tile
@@ -30,7 +30,7 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "Wider? You want me to circle out before I close in?"
   - speaker: iruka_umino
-    text: "Press the wheel down once. That changes the line from a short bend to a wide one."
+    text: "Press the wheel down once. That changes the line from a `short` bend to a `wide` one."
   - speaker: iruka_umino
     text: "Then roll it again if you need to choose which side opens up. Reach that far tile with a broad approach."
     wait: naruto_wide_route_to_far_tile
@@ -39,7 +39,7 @@ dialogue:
   - speaker: iruka_umino
     text: "Not the long way. The deliberate way."
   - speaker: iruka_umino
-    text: "One more thing. If you press and hold instead of tapping, you break into a run."
+    text: "One more thing. If you **press and hold** instead of tapping, you break into a run."
   - speaker: naruto_uzumaki
     text: "So the path stays the same. I just cover it faster."
   - speaker: iruka_umino
@@ -48,16 +48,16 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "Now you're speaking my language."
   - speaker: iruka_umino
-    text: "Speed is useful, but control matters more. Right click, and you can jump along the same route instead of running it."
+    text: "Speed is useful, but control matters more. `Right click`, and you can jump along the same route instead of running it."
   - speaker: naruto_uzumaki
-    text: "So I keep the path, but clear it in jumps."
+    text: "So I just launch straight to the tile."
   - speaker: iruka_umino
     text: "Exactly. Take that far tile again, and do it with a jump."
     wait: naruto_jump_to_far_tile
   - speaker: naruto_uzumaki
     text: "Hah. That's more like it."
   - speaker: iruka_umino
-    text: "And if you hold the right button instead of flicking it, you can skip the route entirely and use teleportation jutsu."
+    text: "And if you **hold the right button** instead of flicking it, you can skip the route entirely and use *teleportation jutsu*."
   - speaker: naruto_uzumaki
     text: "Hold it down, and I just vanish to the tile?"
   - speaker: iruka_umino
@@ -65,3 +65,63 @@ dialogue:
     wait: naruto_teleport_to_training_tile
   - speaker: naruto_uzumaki
     text: "Now that is efficient."
+  - speaker: iruka_umino
+    text: "All right. Enough footwork. We are going to do some *shurikenjutsu*."
+  - speaker: naruto_uzumaki
+    text: "Tch. I can handle target practice. You'll see."
+  - speaker: iruka_umino
+    text: "Hold on. Let me get out of your line first."
+    wait: iruka_move_out_of_the_way
+  - speaker: naruto_uzumaki
+    text: "Hey, I'm not **that** sloppy."
+  - speaker: iruka_umino
+    text: "Then prove it. Take the throwing spot."
+    wait: naruto_move_to_throw_position
+  - speaker: iruka_umino
+    text: "Good. Click the **shuriken** in your inventory."
+  - speaker: iruka_umino
+    text: "Then hover the post straight ahead. The red line will show you the throw."
+  - speaker: iruka_umino
+    text: "When your aim is true, click the post and let it fly."
+    wait: naruto_throw_shuriken_straight
+  - speaker: naruto_uzumaki
+    text: "See? I told you I could do it."
+  - speaker: iruka_umino
+    text: "Straight throws are the easy part. Now curve one in."
+  - speaker: naruto_uzumaki
+    text: "You want me to bend the throw the same way I bent my pathing?"
+  - speaker: iruka_umino
+    text: "Exactly. Keep the same target, but roll the wheel and bring the line in from one side."
+  - speaker: iruka_umino
+    text: "Use a **short arc** and hit the post to your right."
+    wait: naruto_throw_shuriken_short_arc
+  - speaker: naruto_uzumaki
+    text: "Heh. Fine. I'll curve it in."
+  - speaker: iruka_umino
+    text: "Good. Now open the throw wider."
+  - speaker: naruto_uzumaki
+    text: "So this time I switch the family and swing it out before it closes?"
+  - speaker: iruka_umino
+    text: "Exactly. Press the wheel down once to change from a `short` arc to a `wide` one."
+  - speaker: iruka_umino
+    text: "Then roll again to choose the side and hit the last post."
+    wait: naruto_throw_shuriken_wide_arc
+  - speaker: naruto_uzumaki
+    text: "All right. Let's see you complain about *that* one."
+  - speaker: iruka_umino
+    text: "Good. Now we stop drilling one throw at a time."
+  - speaker: iruka_umino
+    text: "I am giving you a timed challenge. I will call a tile. Move to it. Only when you reach it will a post light up for your next throw."
+  - speaker: naruto_uzumaki
+    text: "So I move first, then throw. Seven shuriken. No excuses."
+  - speaker: iruka_umino
+    text: "Exactly. You have `30 seconds`. Watch the count, keep your hands moving, and do not waste a throw."
+  - speaker: naruto_uzumaki
+    text: "Hah. Then quit talking and start the clock."
+  - speaker: iruka_umino
+    text: "Fine. Show me you can keep up once the choices start changing."
+    wait: naruto_shuriken_challenge
+  - speaker: iruka_umino
+    text: "Better. That is what it looks like when you stop flailing and start thinking."
+  - speaker: naruto_uzumaki
+    text: "Yeah, yeah. I still made it."

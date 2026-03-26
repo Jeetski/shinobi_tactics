@@ -30,6 +30,12 @@ export type StageMapSource = {
   fill: {
     tile: string;
   };
+  overrides?: {
+    rings?: Array<{
+      radius: number;
+      tile: string;
+    }>;
+  };
 };
 
 export type StageTile = {
@@ -55,6 +61,7 @@ export type SceneSource = {
   music?: string;
   map: string;
   characters: string;
+  props?: string;
   dialogue?: string;
 };
 
@@ -93,6 +100,29 @@ export type LoadedCharacter = {
   defaults: CharacterDefaults;
 };
 
+export type StagePropSource = {
+  kind?: string;
+  sprite: string;
+  q: number;
+  r: number;
+  s: number;
+  scale?: number;
+  elevation?: number;
+};
+
+export type StagePropsFileSource = {
+  props: Record<string, StagePropSource>;
+};
+
+export type LoadedStageProp = {
+  id: string;
+  kind: string | null;
+  coord: HexCoord;
+  sprite: string;
+  scale: number;
+  elevation: number;
+};
+
 export type DialogueLine = {
   speaker: string;
   text: string;
@@ -111,4 +141,5 @@ export type LoadedStageScene = {
   dialogue_path: string | null;
   map: LoadedStageMap;
   characters: LoadedCharacter[];
+  props: LoadedStageProp[];
 };

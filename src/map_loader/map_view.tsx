@@ -11,7 +11,8 @@ import {
   project_world_to_screen,
   type WorldPoint,
 } from '../projection';
-import { build_character_layout, render_projected_character, render_projected_path_preview, render_projected_tile, TileRenderDefs } from '../rendering';
+import { build_character_layout, render_projected_character, render_projected_path_preview, render_projected_projectile, render_projected_prop, render_projected_tile, TileRenderDefs } from '../rendering';
+import { build_prop_layout } from '../entities/prop_layout';
 import { SpeechRenderer } from '../speech';
 import './map_view.css';
 
@@ -33,6 +34,8 @@ type MapViewProps = {
     r: number;
     s: number;
   }>;
+  highlighted_prop_ids?: string[];
+  prop_highlight_tone?: 'move' | 'attack';
   on_tile_click?: (coord: TileCoord) => void;
   on_tile_hold?: (coord: TileCoord) => void;
   on_tile_right_click?: (coord: TileCoord) => void;
@@ -40,12 +43,34 @@ type MapViewProps = {
   on_tile_hover?: (coord: TileCoord | null) => void;
   on_tile_wheel?: (coord: TileCoord, delta_y: number) => void;
   on_tile_middle_click?: (coord: TileCoord) => void;
+  on_prop_hover?: (prop_id: string | null) => void;
+  on_prop_click?: (prop_id: string) => void;
+  on_prop_wheel?: (prop_id: string, delta_y: number) => void;
+  on_prop_middle_click?: (prop_id: string) => void;
   character_world_overrides?: Record<string, WorldPoint>;
   character_facing_overrides?: Record<string, CharacterFacing>;
   path_preview?: {
     path: HexCoord[];
     family?: PathFamily;
+    tone?: 'move' | 'attack';
   } | null;
+  projectiles?: Array<{
+    id: string;
+    sprite: string;
+    world_position: WorldPoint;
+    size_m: number;
+    rotation_deg: number;
+  }>;
+  prop_effects?: Array<{
+    id: string;
+    prop_id: string;
+    sprite: string;
+    size_m: number;
+    rotation_deg: number;
+    offset_x: number;
+    offset_y: number;
+    offset_z: number;
+  }>;
 };
 
 const stage_padding_px = 18;
@@ -58,6 +83,8 @@ export function MapView({
   active_speech_line = null,
   on_advance_speech,
   highlighted_tiles = [],
+  highlighted_prop_ids = [],
+  prop_highlight_tone = 'attack',
   on_tile_click,
   on_tile_hold,
   on_tile_right_click,
@@ -65,15 +92,23 @@ export function MapView({
   on_tile_hover,
   on_tile_wheel,
   on_tile_middle_click,
+  on_prop_hover,
+  on_prop_click,
+  on_prop_wheel,
+  on_prop_middle_click,
   character_world_overrides = {},
   character_facing_overrides = {},
   path_preview = null,
+  projectiles = [],
+  prop_effects = [],
 }: MapViewProps) {
   const [viewport_size, set_viewport_size] = useState(() => ({
     width: window.innerWidth,
     height: window.innerHeight,
   }));
   const [character_masks, set_character_masks] = useState<Record<string, CollisionMask>>({});
+  const [prop_masks, set_prop_masks] = useState<Record<string, CollisionMask>>({});
+  const [effect_masks, set_effect_masks] = useState<Record<string, CollisionMask>>({});
   const [hovered_tile, set_hovered_tile] = useState<TileCoord | null>(null);
   const hold_timer_ref = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const hold_fired_coord_ref = useRef<string | null>(null);
@@ -124,6 +159,67 @@ export function MapView({
       cancelled = true;
     };
   }, [scene.characters]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const load_prop_masks = async () => {
+      const sprite_paths = Array.from(
+        new Set(scene.props.map((prop) => prop.sprite)),
+      );
+
+      const loaded_masks = await Promise.all(
+        sprite_paths.map(async (sprite_path) => [sprite_path, await loadCollisionMask(sprite_path)] as const),
+      );
+
+      if (cancelled) {
+        return;
+      }
+
+      set_prop_masks(Object.fromEntries(loaded_masks));
+    };
+
+    void load_prop_masks();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [scene.props]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const effect_sprite_paths = Array.from(
+      new Set([
+        ...projectiles.map((projectile) => projectile.sprite),
+        ...prop_effects.map((effect) => effect.sprite),
+      ]),
+    );
+
+    const load_effect_masks = async () => {
+      if (effect_sprite_paths.length === 0) {
+        set_effect_masks({});
+        return;
+      }
+
+      const loaded_masks = await Promise.all(
+        effect_sprite_paths.map(async (sprite_path) => [sprite_path, await loadCollisionMask(sprite_path)] as const),
+      );
+
+      if (!cancelled) {
+        set_effect_masks(Object.fromEntries(loaded_masks));
+      }
+    };
+
+    void load_effect_masks();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    projectiles.map((projectile) => projectile.sprite).sort().join('|'),
+    prop_effects.map((effect) => effect.sprite).sort().join('|'),
+  ]);
 
   useEffect(() => {
     return () => {
@@ -211,14 +307,42 @@ export function MapView({
       };
     });
 
+    const projected_props = scene.props.map((prop) => {
+      const world_position = {
+        ...flat_top_hex_to_world(prop.coord, default_projection_settings.tile_radius),
+        z: prop.elevation,
+      };
+      const screen_position = project_world_to_screen(world_position, default_projection_settings);
+      const perspective_scale = get_perspective_scale(screen_position.y, min_projected_y(scene), max_projected_y(scene), default_projection_settings);
+      const sprite_mask = prop_masks[prop.sprite];
+      const approximate_height = (projected_hex_extents.max_y - projected_hex_extents.min_y) * 1.04 * prop.scale * perspective_scale;
+      const layout = build_prop_layout(prop, screen_position, perspective_scale, sprite_mask);
+
+      return {
+        prop,
+        world_position,
+        sprite_mask,
+        layout,
+        x: screen_position.x,
+        y: screen_position.y,
+        depth: get_depth_sort_value(screen_position, world_position) + 260,
+        top_extent: screen_position.y - approximate_height * 0.84,
+        bottom_extent: screen_position.y + approximate_height * 0.18,
+        perspective_scale,
+        render_kind: 'prop' as const,
+      };
+    });
+
     const min_x = Math.min(...projected_tiles.map((tile) => tile.x + projected_hex_extents.min_x));
     const max_x = Math.max(...projected_tiles.map((tile) => tile.x + projected_hex_extents.max_x));
     const min_y = Math.min(
       ...projected_tiles.map((tile) => tile.y + projected_hex_extents.min_y),
+      ...projected_props.map((prop) => prop.top_extent),
       ...projected_characters.map((character) => character.top_extent),
     );
     const max_y = Math.max(
       ...projected_tiles.map((tile) => tile.y + projected_hex_extents.max_y),
+      ...projected_props.map((prop) => prop.bottom_extent),
       ...projected_characters.map((character) => character.bottom_extent),
     );
     const y_span = Math.max(1, max_y - min_y);
@@ -227,6 +351,7 @@ export function MapView({
         ...tile,
         depth_ratio: (tile.y - min_y) / y_span,
       })),
+      ...projected_props,
       ...projected_characters,
     ]
       .map((renderable) => {
@@ -241,7 +366,13 @@ export function MapView({
       })
       .sort((left, right) => {
         if (left.render_kind !== right.render_kind) {
-          return left.render_kind === 'tile' ? -1 : 1;
+          if (left.render_kind === 'tile') {
+            return -1;
+          }
+
+          if (right.render_kind === 'tile') {
+            return 1;
+          }
         }
 
         if (left.render_kind === 'tile' && right.render_kind === 'tile') {
@@ -250,7 +381,7 @@ export function MapView({
           }
 
           if (left.is_highlighted !== right.is_highlighted) {
-            return left.is_highlighted ? 1 : -1;
+          return left.is_highlighted ? 1 : -1;
           }
         }
 
@@ -264,7 +395,7 @@ export function MapView({
       view_box_width: max_x - min_x + stroke_safe_padding * 2,
       view_box_height: max_y - min_y + stroke_safe_padding * 2,
     };
-  }, [character_facing_overrides, character_masks, character_world_overrides, highlighted_tiles, hovered_tile, scene]);
+  }, [character_facing_overrides, character_masks, character_world_overrides, highlighted_tiles, hovered_tile, prop_masks, scene]);
 
   const frame_width = viewport_size.width - stage_padding_px * 2;
   const frame_height = viewport_size.height - stage_padding_px * 2;
@@ -399,6 +530,62 @@ export function MapView({
             />
           ))}
 
+          {renderables.map((renderable) => {
+            if (renderable.render_kind !== 'prop') {
+              return null;
+            }
+
+            const hit_padding_x = renderable.prop.kind === 'target_post' ? 16 : 6;
+            const hit_padding_y = renderable.prop.kind === 'target_post' ? 12 : 6;
+
+            return (
+              <rect
+                key={`prop-hit:${renderable.prop.id}`}
+                className="prop-hit-area"
+                x={renderable.layout.sprite_x + renderable.layout.opaque_bounds.left - hit_padding_x}
+                y={renderable.layout.sprite_y + renderable.layout.opaque_bounds.top - hit_padding_y}
+                width={Math.max(1, renderable.layout.opaque_bounds.right - renderable.layout.opaque_bounds.left + hit_padding_x * 2)}
+                height={Math.max(1, renderable.layout.opaque_bounds.bottom - renderable.layout.opaque_bounds.top + hit_padding_y * 2)}
+                fill="transparent"
+                pointerEvents="all"
+                onMouseEnter={(event) => {
+                  event.stopPropagation();
+                  on_prop_hover?.(renderable.prop.id);
+                }}
+                onMouseLeave={(event) => {
+                  event.stopPropagation();
+                  on_prop_hover?.(null);
+                }}
+                onWheel={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  on_prop_wheel?.(renderable.prop.id, event.deltaY);
+                }}
+                onMouseDown={(event) => {
+                  if (event.button !== 1) {
+                    return;
+                  }
+
+                  event.preventDefault();
+                  event.stopPropagation();
+                  on_prop_middle_click?.(renderable.prop.id);
+                }}
+                onAuxClick={(event) => {
+                  if (event.button !== 1) {
+                    return;
+                  }
+
+                  event.preventDefault();
+                  event.stopPropagation();
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  on_prop_click?.(renderable.prop.id);
+                }}
+              />
+            );
+          })}
+
           <g filter="url(#platform-shadow-blur)">
             {renderables.map((renderable) => {
               if (renderable.render_kind !== 'tile') {
@@ -431,11 +618,71 @@ export function MapView({
             return null;
           })}
 
+          {renderables.map((renderable) => {
+            if (renderable.render_kind !== 'prop') {
+              return null;
+            }
+
+            if (!highlighted_prop_ids.includes(renderable.prop.id)) {
+              return null;
+            }
+
+            return render_prop_tile_highlight(renderable.prop.coord, prop_highlight_tone, renderable.prop.id);
+          })}
+
           {path_preview ? render_projected_path_preview(path_preview) : null}
+
+          {projectiles.map((projectile) =>
+            render_projected_projectile(
+              projectile,
+              get_perspective_scale(
+                project_world_to_screen(projectile.world_position, default_projection_settings).y,
+                min_projected_y(scene),
+                max_projected_y(scene),
+                default_projection_settings,
+              ),
+              effect_masks[projectile.sprite],
+            ),
+          )}
 
           {renderables.map((renderable) => {
             if (renderable.render_kind === 'tile') {
               return null;
+            }
+
+            if (renderable.render_kind === 'prop') {
+              return (
+                <g key={renderable.prop.id}>
+                  {render_projected_prop({
+                    prop: renderable.prop,
+                    world_position: renderable.world_position,
+                    perspective_scale: renderable.perspective_scale,
+                    sprite_mask: renderable.sprite_mask,
+                  })}
+                  {prop_effects
+                    .filter((effect) => effect.prop_id === renderable.prop.id)
+                    .map((effect) =>
+                      render_projected_projectile(
+                        {
+                          id: effect.id,
+                          sprite: effect.sprite,
+                          size_m: effect.size_m,
+                          rotation_deg: effect.rotation_deg,
+                          world_position: {
+                            x: renderable.world_position.x + effect.offset_x,
+                            y:
+                              renderable.world_position.y
+                              - default_projection_settings.tile_radius * 0.14
+                              + effect.offset_y,
+                            z: renderable.world_position.z + effect.offset_z,
+                          },
+                        },
+                        renderable.perspective_scale,
+                        effect_masks[effect.sprite],
+                      ),
+                    )}
+                </g>
+              );
             }
 
             return render_projected_character({
@@ -461,6 +708,49 @@ export function MapView({
         ) : null}
       </div>
     </section>
+  );
+}
+
+function render_prop_tile_highlight(coord: TileCoord, tone: 'move' | 'attack', key: string) {
+  const points = get_tile_hit_points(coord);
+  const palette =
+    tone === 'attack'
+      ? {
+          outer: 'rgba(131, 48, 53, 0.34)',
+          inner: 'rgba(209, 116, 116, 0.88)',
+        }
+      : {
+          outer: 'rgba(128, 173, 122, 0.38)',
+          inner: 'rgba(188, 231, 172, 0.88)',
+        };
+
+  return (
+    <g key={`prop-highlight:${key}`} pointerEvents="none">
+      <polygon
+        points={points}
+        fill="none"
+        stroke={palette.outer}
+        strokeWidth="5.4"
+        strokeLinejoin="round"
+      />
+      <polygon
+        points={points}
+        fill="none"
+        stroke={palette.inner}
+        strokeWidth="3"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+        strokeDasharray="34 18"
+      >
+        <animate
+          attributeName="stroke-dashoffset"
+          from="0"
+          to="-104"
+          dur="5.8s"
+          repeatCount="indefinite"
+        />
+      </polygon>
+    </g>
   );
 }
 

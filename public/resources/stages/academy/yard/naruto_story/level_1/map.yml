@@ -1,6 +1,10 @@
 id: academy_yard
 layout:
   orientation: flat_top
-  radius: 2
+  radius: 3
 fill:
   tile: dirt
+overrides:
+  rings:
+    - radius: 3
+      tile: grass

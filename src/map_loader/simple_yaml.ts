@@ -193,8 +193,17 @@ function parse_scalar(value: string): Scalar {
     (value.startsWith('"') && value.endsWith('"')) ||
     (value.startsWith("'") && value.endsWith("'"))
   ) {
-    return value.slice(1, -1);
+    return unescape_quoted_scalar(value.slice(1, -1));
   }
 
   return value;
+}
+
+function unescape_quoted_scalar(value: string) {
+  return value
+    .replace(/\\n/g, '\n')
+    .replace(/\\t/g, '\t')
+    .replace(/\\"/g, '"')
+    .replace(/\\'/g, "'")
+    .replace(/\\\\/g, '\\');
 }

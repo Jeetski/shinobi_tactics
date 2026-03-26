@@ -6,4 +6,5 @@ background:
 music: /resources/music/daylight_of_konoha.mp3
 map: map.yml
 characters: characters.yml
+props: props.yml
 dialogue: dialogue/intro.yml

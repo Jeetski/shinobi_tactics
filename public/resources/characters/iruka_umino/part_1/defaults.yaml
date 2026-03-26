@@ -1,5 +1,5 @@
 id: iruka_umino/part_1
 sprite_front: /resources/characters/iruka_umino/part_1/sprites/neutral_front.png
-sprite_back: /resources/characters/iruka_umino/part_1/sprites/neutral_back.png
+sprite_back: /resources/characters/iruka_umino/part_1/sprites/back.png
 sprite_left: /resources/characters/iruka_umino/part_1/sprites/neutral_left.png
 sprite_right: /resources/characters/iruka_umino/part_1/sprites/neutral_right.png

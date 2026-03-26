@@ -14,17 +14,47 @@ type RenderableTile = {
   is_hovered?: boolean;
 };
 
+const tile_texture_ids = [
+  'concrete_cross',
+  'concrete',
+  'crystal',
+  'dirt',
+  'grass',
+  'ice',
+  'magma_cracks',
+  'marble',
+  'mud',
+  'rock',
+  'sand',
+  'snow',
+  'stone_tiles',
+  'stone',
+  'tiled_roof',
+  'water',
+  'wooden_planks',
+] as const;
+
 export function TileRenderDefs() {
   return (
     <defs>
-      <pattern
-        id="tile-texture-dirt"
-        patternUnits="userSpaceOnUse"
-        width="96"
-        height="96"
-      >
-        <image href="/resources/textures/dirt.png" x="0" y="0" width="96" height="96" preserveAspectRatio="xMidYMid slice" />
-      </pattern>
+      {tile_texture_ids.map((texture_id) => (
+        <pattern
+          key={texture_id}
+          id={`tile-texture-${texture_id}`}
+          patternUnits="userSpaceOnUse"
+          width="96"
+          height="96"
+        >
+          <image
+            href={`/resources/textures/${texture_id}.png`}
+            x="0"
+            y="0"
+            width="96"
+            height="96"
+            preserveAspectRatio="xMidYMid slice"
+          />
+        </pattern>
+      ))}
 
       <linearGradient id="tile-light-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
         <stop offset="0%" stopColor="rgba(255, 245, 222, 0.22)" />

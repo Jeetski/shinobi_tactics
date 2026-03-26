@@ -5,13 +5,18 @@
 }
 
 .naruto-story {
+  --brand-paper: #fff2d0;
+  --brand-gold-line: rgba(255, 226, 171, 0.35);
+  --brand-gold-soft: rgba(255, 226, 171, 0.22);
+  --brand-ink-panel: rgba(20, 10, 6, 0.78);
+  --brand-ink-panel-strong: rgba(11, 5, 3, 0.9);
   min-height: 100dvh;
   display: grid;
   place-items: center;
   padding: 0.75rem;
   overflow: hidden;
   background: #000;
-  color: #fff6eb;
+  color: var(--brand-paper);
 }
 
 .naruto-story__content {
@@ -24,11 +29,51 @@
   align-items: center;
 }
 
+.naruto-story__challenge-timer {
+  position: absolute;
+  top: 1.2rem;
+  left: 50%;
+  z-index: 18;
+  transform: translateX(-50%);
+  min-width: 7.25rem;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid rgba(255, 242, 208, 0.28);
+  border-radius: 999px;
+  background: rgba(18, 9, 4, 0.5);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.24),
+    inset 0 0 0 1px rgba(255, 242, 208, 0.08);
+  color: var(--brand-paper);
+  font-family: "Naruto", serif;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.45),
+    0 0 16px rgba(255, 242, 208, 0.12);
+  pointer-events: none;
+  backdrop-filter: blur(8px);
+}
+
+.naruto-story__challenge-timer.is-danger {
+  color: #ff8d8d;
+  border-color: rgba(255, 122, 122, 0.34);
+  background: rgba(36, 7, 8, 0.62);
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.48),
+    0 0 18px rgba(255, 124, 124, 0.28);
+}
+
+.naruto-story__challenge-timer.is-success {
+  min-width: 18rem;
+}
+
 .naruto-story__status {
   margin: 0;
   text-align: center;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-size: 0.82rem;
-  color: rgba(255, 240, 216, 0.78);
+  color: rgba(255, 242, 208, 0.78);
 }

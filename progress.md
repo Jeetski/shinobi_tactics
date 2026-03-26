@@ -119,3 +119,38 @@ Original prompt: okay now, the next step is probably making a reusable loading s
     - wide left: `q2 r0 s-2 -> q1 r1 s-2 -> q0 r2 s-2 -> q-1 r2 s-1 -> q-2 r2 s0 -> destination`
     - short right: `q1 r-1 s0 -> q0 r-1 s1 -> q-1 r0 s1 -> destination`
     - wide right: `q2 r-2 s0 -> q1 r-2 s1 -> q0 r-2 s2 -> q-1 r-1 s2 -> q-2 r0 s2 -> destination`
+- Added the first ranged-combat tutorial slice:
+  - inventory bar appears when Iruka introduces shuriken practice
+  - target posts are targetable props
+  - hovering a target post shows a muted red throw preview
+  - clicking throws a spinning shuriken
+  - a random stuck-shuriken sprite with random lodged rotation appears on impact
+- Added follow-up ranged tutorial beats for:
+  - straight throw
+  - short-arc throw
+  - wide-arc throw
+  with wheel-based side selection and middle-click family switching on target posts.
+- Fixed two mask-loading churn bugs that were causing hitching:
+  - projectile/effect mask loading in `src/map_loader/map_view.tsx`
+  - inventory icon mask loading in `src/hud/inventory_bar.tsx`
+- Current change: shuriken projectiles now follow the selected preview path polyline instead of interpolating directly from start to target.
+- TODO:
+  - validate short/wide shuriken flight visually in-browser and tune speed/arc height if the turns feel too sharp or too fast
+  - likely next tutorial step is melee or target damage/health instead of just sticking visuals
+
+- Added a timed shuriken challenge after the wide-arc lesson:
+  - random valid destination tile highlight excluding props and Iruka
+  - once Naruto reaches it, a random target post gets muted-red highlighted
+  - 3,2,1,GO! top-center countdown and a 30-second Naruto-font timer overlay
+  - failure triggers a short Iruka/Naruto retry exchange and resets the attempt with 7 shuriken
+  - challenge success resumes the main dialogue script
+- Added reusable prop highlighting support in src/map_loader/map_view.tsx so target posts can be highlighted in the same style family as tile objectives, using the ranged muted-red palette.
+- Retroactively enabled target-post highlight selection for the earlier target-practice beats, not just the new timed challenge.
+- Added a dedicated audio layer under `src/audio/` with `use_music_controller.ts` for looping scene music and one-shot stingers, plus `beep.ts` for UI countdown warning tones.
+- Challenge polish update:
+  - multiple shuriken can now remain lodged in the same target post with random sprite choice, offset, and rotation
+  - challenge countdown now beeps on `3`, `2`, `1`, with a longer beep on `GO!`
+  - timer turns red under 5 seconds and plays four quick warning beeps at `5`, `4`, `3`, `2`
+  - challenge countdown switches music to `dance.mp3`
+  - challenge success shows `Mission Acomplished!`, plays `ill_do_it_right.mp3`, then returns to `daylight_of_konoha.mp3`
+- Mirrored `dance.mp3`, `ill_do_it_right.mp3`, and `daylight_of_konoha.mp3` into `public/resources/music/`.

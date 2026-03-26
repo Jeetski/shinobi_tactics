@@ -22,3 +22,11 @@ export function build_hex_disc(radius: number) {
 
   return tiles;
 }
+
+export function hex_distance(a: HexCoord, b: HexCoord) {
+  return Math.max(
+    Math.abs(a.q - b.q),
+    Math.abs(a.r - b.r),
+    Math.abs(a.s - b.s),
+  );
+}

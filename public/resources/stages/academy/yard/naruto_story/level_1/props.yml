@@ -1,0 +1,29 @@
+props:
+  stump_01:
+    kind: stump
+    sprite: /resources/enviroment/stump_grass.png
+    q: 2
+    r: 1
+    s: -3
+    scale: 1
+  target_post_01:
+    kind: target_post
+    sprite: /resources/enviroment/target_post.png
+    q: -2
+    r: -1
+    s: 3
+    scale: 1
+  target_post_02:
+    kind: target_post
+    sprite: /resources/enviroment/target_post.png
+    q: 0
+    r: -3
+    s: 3
+    scale: 1
+  target_post_03:
+    kind: target_post
+    sprite: /resources/enviroment/target_post.png
+    q: 2
+    r: -3
+    s: 1
+    scale: 1

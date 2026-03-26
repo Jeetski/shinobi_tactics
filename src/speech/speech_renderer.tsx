@@ -4,6 +4,7 @@ import {
   normalizeBounds,
   type CollisionMask,
 } from '../lib/collision_mask';
+import { render_dialogue_markdown } from './dialogue_markdown';
 import './speech.css';
 
 type SpeechRendererProps = {
@@ -105,7 +106,7 @@ export function SpeechRenderer({
         }}
       >
         <p className="speech-bubble__speaker">{speaker_name}</p>
-        <p className="speech-bubble__text">{text}</p>
+        <div className="speech-bubble__text">{render_dialogue_markdown(text)}</div>
         <div className="speech-bubble__actions" aria-hidden="true">
           <span className="speech-bubble__key speech-bubble__key--secondary">Esc</span>
           <span className="speech-bubble__key speech-bubble__key--primary">Enter</span>
