@@ -1,0 +1,7 @@
+{
+  "id": "feature.whisker_marks",
+  "type": "feature",
+  "title": "Whisker Marks",
+  "description": "Reusable face feature placeholder for future layer imports.",
+  "tags": ["feature", "face"]
+}

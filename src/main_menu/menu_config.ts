@@ -4,7 +4,7 @@ export type MenuOption = {
   blurb: string;
 };
 
-export type MenuScreen = 'main' | 'story' | 'new_game';
+export type MenuScreen = 'main' | 'story' | 'new_game' | 'studio';
 
 export const main_menu_options: MenuOption[] = [
   { id: 'story', label: 'STORY', blurb: 'Follow a branching shinobi campaign through rival villages, betrayals, and squad tactics.' },
@@ -26,6 +26,10 @@ export const new_game_menu_options: MenuOption[] = [
   { id: 'sasuke', label: 'SASUKE', blurb: 'Begin the story as Sasuke.' },
 ];
 
+export const studio_menu_options: MenuOption[] = [
+  { id: 'characters', label: 'CHARACTERS', blurb: 'Open the character studio.' },
+];
+
 export function get_menu_options(menu_screen: MenuScreen) {
   if (menu_screen === 'story') {
     return story_menu_options;
@@ -33,6 +37,10 @@ export function get_menu_options(menu_screen: MenuScreen) {
 
   if (menu_screen === 'new_game') {
     return new_game_menu_options;
+  }
+
+  if (menu_screen === 'studio') {
+    return studio_menu_options;
   }
 
   return main_menu_options;
@@ -44,4 +52,8 @@ export function get_main_menu_story_index() {
 
 export function get_story_menu_new_game_index() {
   return story_menu_options.findIndex((option) => option.id === 'new_game');
+}
+
+export function get_main_menu_studio_index() {
+  return main_menu_options.findIndex((option) => option.id === 'studio');
 }

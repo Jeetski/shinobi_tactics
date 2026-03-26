@@ -1,0 +1,16 @@
+{
+  "id": "garment.hidden_leaf_headband",
+  "type": "garment",
+  "title": "Hidden Leaf Headband",
+  "description": "Reusable forehead protector placeholder.",
+  "tags": ["garment", "headband", "leaf"],
+  "payload": {
+    "reference_scope": "accessories",
+    "default_overrides": {
+      "palette_slot": 6,
+      "opacity": 1,
+      "offset_x": 0,
+      "offset_y": 0
+    }
+  }
+}

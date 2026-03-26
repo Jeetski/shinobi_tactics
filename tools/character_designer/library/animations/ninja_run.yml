@@ -1,0 +1,39 @@
+{
+  "id": "animation.ninja_run",
+  "type": "animation",
+  "title": "Ninja Run",
+  "description": "Shared fast locomotion preset for shinobi sprinting.",
+  "tags": ["animation", "locomotion", "ninja_run"],
+  "payload": {
+    "clip": {
+      "id": "ninja_run",
+      "label": "Ninja Run",
+      "fps": 16,
+      "duration_frames": 8,
+      "direction_overrides": {
+        "front": { "expression_id": "angry" },
+        "back": { "expression_id": "angry" },
+        "left": { "expression_id": "angry" },
+        "right": { "expression_id": "angry" }
+      },
+      "tracks": {
+        "expressions": [{ "frame": 0, "expression_id": "angry" }],
+        "region_offsets": [
+          { "frame": 0, "region_id": "lower_body", "x": 0, "y": 0 },
+          { "frame": 2, "region_id": "lower_body", "x": 2, "y": 0 },
+          { "frame": 4, "region_id": "lower_body", "x": -2, "y": 0 },
+          { "frame": 6, "region_id": "lower_body", "x": 2, "y": 0 },
+          { "frame": 0, "region_id": "torso", "x": 0, "y": -1 }
+        ],
+        "events": [
+          { "frame": 0, "id": "ninja_step_left" },
+          { "frame": 4, "id": "ninja_step_right" }
+        ],
+        "root_motion": [
+          { "frame": 0, "x": 0, "y": 0 },
+          { "frame": 7, "x": 14, "y": 0 }
+        ]
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ import {
 } from './layout_editor';
 import {
   get_main_menu_story_index,
+  get_main_menu_studio_index,
   get_menu_options,
   get_story_menu_new_game_index,
   type MenuScreen,
@@ -155,7 +156,7 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
 
     window.addEventListener('keydown', handle_key_down);
     return () => window.removeEventListener('keydown', handle_key_down);
-  }, [current_menu_options.length, is_enabled, layout_mode, menu_screen]);
+  }, [current_menu_options.length, is_enabled, layout_mode, menu_screen, selected_option.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -302,6 +303,12 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
       return;
     }
 
+    if (menu_screen === 'main' && selected_option.id === 'studio') {
+      set_menu_screen('studio');
+      set_selected_index(0);
+      return;
+    }
+
     if (menu_screen === 'story' && selected_option.id === 'new_game') {
       set_menu_screen('new_game');
       set_selected_index(0);
@@ -310,6 +317,11 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
 
     if (menu_screen === 'new_game' && selected_option.id === 'naruto') {
       on_naruto_selected?.();
+      return;
+    }
+
+    if (menu_screen === 'studio' && selected_option.id === 'characters') {
+      window.location.href = '/character-designer.html';
     }
   }
 
@@ -327,6 +339,12 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
     if (menu_screen === 'story') {
       set_menu_screen('main');
       set_selected_index(get_main_menu_story_index());
+      return;
+    }
+
+    if (menu_screen === 'studio') {
+      set_menu_screen('main');
+      set_selected_index(get_main_menu_studio_index());
     }
   }
 

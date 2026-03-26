@@ -1,0 +1,16 @@
+{
+  "id": "palette.leaf_genin",
+  "type": "palette",
+  "title": "Leaf Genin Palette",
+  "description": "Warm skin, orange cloth, dark navy accents.",
+  "tags": ["palette", "leaf", "genin"],
+  "payload": {
+    "colors": {
+      "1": "#f3c7a4",
+      "2": "#293349",
+      "3": "#ff9d42",
+      "4": "#f2d06d",
+      "5": "#dce7ff"
+    }
+  }
+}

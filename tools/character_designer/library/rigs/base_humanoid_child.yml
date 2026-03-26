@@ -1,0 +1,7 @@
+{
+  "id": "rig.base_humanoid_child",
+  "type": "rig",
+  "title": "Humanoid Child Rig",
+  "description": "Starter rig preset matching the current shinobi proportions.",
+  "tags": ["rig", "base", "child"]
+}

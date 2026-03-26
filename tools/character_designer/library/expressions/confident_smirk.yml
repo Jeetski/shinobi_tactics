@@ -1,0 +1,22 @@
+{
+  "id": "expression.confident_smirk",
+  "type": "expression",
+  "title": "Confident Smirk",
+  "description": "Mouth swap plus brow tilt for a cocky expression.",
+  "tags": ["expression", "face"],
+  "payload": {
+    "label": "Confident Smirk",
+    "layer_visibility": {
+      "mouth_neutral": false,
+      "mouth_smile": true,
+      "mouth_angry": false,
+      "mouth_surprised": false,
+      "mouth_hurt": false
+    },
+    "layer_offsets": {
+      "brow_left": { "x": 0, "y": -1 },
+      "brow_right": { "x": 1, "y": 0 },
+      "mouth_smile": { "x": 1, "y": 0 }
+    }
+  }
+}

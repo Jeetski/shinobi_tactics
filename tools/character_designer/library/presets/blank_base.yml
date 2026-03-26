@@ -1,0 +1,7 @@
+{
+  "id": "preset.blank_base",
+  "type": "preset",
+  "title": "Blank Base",
+  "description": "Starter document with default groups and palette slots.",
+  "tags": ["preset", "base"]
+}

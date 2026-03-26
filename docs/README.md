@@ -4,6 +4,8 @@ This folder is the starting point for project documentation.
 
 Current docs:
 
+- [ENGINE_DIRECTION.md](C:/Users/david/Desktop/Hivemind%20Studio/Shinobi%20Tactics/ENGINE_DIRECTION.md)
+- [CHARACTER_STUDIO_STATUS.md](C:/Users/david/Desktop/Hivemind%20Studio/Shinobi%20Tactics/CHARACTER_STUDIO_STATUS.md)
 - [overview.md](C:/Users/david/Desktop/Hivemind%20Studio/Shinobi%20Tactics/docs/overview.md)
 - [architecture.md](C:/Users/david/Desktop/Hivemind%20Studio/Shinobi%20Tactics/docs/architecture.md)
 - [data_layout.md](C:/Users/david/Desktop/Hivemind%20Studio/Shinobi%20Tactics/docs/data_layout.md)

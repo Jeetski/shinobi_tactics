@@ -1,0 +1,40 @@
+{
+  "id": "animation.run",
+  "type": "animation",
+  "title": "Run",
+  "description": "Shared locomotion clip for faster ground movement.",
+  "tags": ["animation", "locomotion", "run"],
+  "payload": {
+    "clip": {
+      "id": "run",
+      "label": "Run",
+      "fps": 14,
+      "duration_frames": 10,
+      "direction_overrides": {
+        "front": { "expression_id": "neutral" },
+        "back": { "expression_id": "neutral" },
+        "left": { "expression_id": "neutral" },
+        "right": { "expression_id": "neutral" }
+      },
+      "tracks": {
+        "expressions": [{ "frame": 0, "expression_id": "neutral" }],
+        "region_offsets": [
+          { "frame": 0, "region_id": "lower_body", "x": 0, "y": 0 },
+          { "frame": 2, "region_id": "lower_body", "x": 1, "y": 0 },
+          { "frame": 5, "region_id": "lower_body", "x": -1, "y": 0 },
+          { "frame": 8, "region_id": "lower_body", "x": 1, "y": 0 },
+          { "frame": 0, "region_id": "torso", "x": 0, "y": 0 },
+          { "frame": 4, "region_id": "torso", "x": 0, "y": -1 }
+        ],
+        "events": [
+          { "frame": 0, "id": "run_step_left" },
+          { "frame": 5, "id": "run_step_right" }
+        ],
+        "root_motion": [
+          { "frame": 0, "x": 0, "y": 0 },
+          { "frame": 9, "x": 10, "y": 0 }
+        ]
+      }
+    }
+  }
+}
