@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { InventoryBar } from '../hud/inventory_bar';
 import { UnitStatusPanel } from '../hud/unit_status_panel';
-import { play_beep, useMusicController } from '../audio';
+import { play_beep, play_sfx, start_looping_sfx, stop_looping_sfx, useMusicController } from '../audio';
 import { load_stage_scene, MapView, type LoadedStageScene } from '../map_loader';
 import type { CharacterFacing, HexCoord, LoadedStageProp } from '../map_loader/map_types';
 import { build_path_family_variant, build_shortest_path, key_hex, type PathFamily, type PathVariant } from '../movement';
@@ -47,6 +47,12 @@ const challenge_countdown_ms = 4_000;
 const challenge_now_tick_ms = 90;
 const dance_music_path = '/resources/music/dance.mp3';
 const success_music_path = '/resources/music/ill_do_it_right.mp3';
+const weapon_equip_sfx_path = '/resources/sfx/weapon_equip.wav';
+const projectile_throw_sfx_path = '/resources/sfx/projectile_weapon_throw.wav';
+const projectile_hit_sfx_path = '/resources/sfx/projectile_weapon_hit.mp3';
+const walk_loop_sfx_path = '/resources/sfx/walk.wav';
+const run_loop_sfx_path = '/resources/sfx/run.wav';
+const movement_loop_sfx_key = 'naruto-story-movement';
 
 type MoveInputType = 'click' | 'hold' | 'right_click' | 'right_hold';
 type MoveSpeed = 'walk' | 'run' | 'jump' | 'teleport';
@@ -834,6 +840,15 @@ export function NarutoStory() {
     }
 
     set_character_moving(set_moving_characters, character_id, true);
+    if (character_id === naruto_character_id) {
+      if (move_speed === 'walk') {
+        start_looping_sfx(movement_loop_sfx_key, walk_loop_sfx_path, 0.46);
+      } else if (move_speed === 'run') {
+        start_looping_sfx(movement_loop_sfx_key, run_loop_sfx_path, 0.5);
+      } else {
+        stop_looping_sfx(movement_loop_sfx_key);
+      }
+    }
     const segment_duration_ms =
       move_speed === 'run'
         ? run_hop_duration_ms
@@ -854,6 +869,9 @@ export function NarutoStory() {
         set_character_world_override(set_character_world_overrides, character_id, null);
         set_character_coord_override(set_character_coord_overrides, character_id, path[path.length - 1] ?? null);
         set_character_moving(set_moving_characters, character_id, false);
+        if (character_id === naruto_character_id) {
+          stop_looping_sfx(movement_loop_sfx_key);
+        }
         on_complete();
         return;
       }
@@ -886,6 +904,9 @@ export function NarutoStory() {
 
         if (segment_index + 1 >= path.length - 1) {
           set_character_moving(set_moving_characters, character_id, false);
+          if (character_id === naruto_character_id) {
+            stop_looping_sfx(movement_loop_sfx_key);
+          }
           on_complete();
           return;
         }
@@ -910,6 +931,9 @@ export function NarutoStory() {
     }
 
     set_character_moving(set_moving_characters, character_id, true);
+    if (character_id === naruto_character_id) {
+      stop_looping_sfx(movement_loop_sfx_key);
+    }
     set_character_facing_override(set_character_facing_overrides, character_id, get_facing_for_step(current_coord, coord));
     set_character_world_override(set_character_world_overrides, character_id, null);
     set_character_coord_override(set_character_coord_overrides, character_id, coord);
@@ -1431,6 +1455,7 @@ export function NarutoStory() {
     const projectile_id = `shuriken:${Date.now()}`;
 
     set_hovered_target_prop_id(null);
+    play_sfx(projectile_throw_sfx_path, 0.72);
 
     const animate_throw = (now: number) => {
       const progress = Math.min(1, Math.max(0, (now - start_time) / duration_ms));
@@ -1456,6 +1481,7 @@ export function NarutoStory() {
       }
 
       set_active_projectile(null);
+      play_sfx(projectile_hit_sfx_path, 0.74);
       set_shuriken_count((current) => Math.max(0, current - 1));
       set_prop_effects((current) => [
         ...current,
@@ -1532,7 +1558,9 @@ export function NarutoStory() {
   const active_override_dialogue_line =
     override_dialogue_lines?.[override_dialogue_index] ?? null;
   const rendered_speech_line =
-    active_override_dialogue_line
+    is_challenge_active && !is_override_dialogue_active
+      ? null
+      : active_override_dialogue_line
       ? {
           speaker: active_override_dialogue_line.speaker,
           text: active_override_dialogue_line.text,
@@ -1664,7 +1692,13 @@ export function NarutoStory() {
                 return;
               }
 
-              set_selected_inventory_index((current) => (current === index ? null : index));
+              set_selected_inventory_index((current) => {
+                const next_index = current === index ? null : index;
+                if (next_index !== null && next_index !== current) {
+                  play_sfx(weapon_equip_sfx_path, 0.68);
+                }
+                return next_index;
+              });
             }}
           />
         ) : null}

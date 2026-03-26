@@ -1,2 +1,2 @@
-export { useMusicController } from './use_music_controller';
-export { play_beep } from './beep';
+export { useMusicController } from './music';
+export { play_beep, play_sfx, start_looping_sfx, stop_looping_sfx } from './sfx';

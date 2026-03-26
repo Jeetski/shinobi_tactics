@@ -13,13 +13,19 @@ dialogue:
   - speaker: iruka_umino
     text: "Then stay focused. The next lesson is harder."
   - speaker: iruka_umino
+    text: "Walking is slow, but it keeps your noise down. When you do not want every ear on the field turning toward you, you walk."
+  - speaker: iruka_umino
     text: "Look ahead, Naruto. See the line in front of you?"
   - speaker: iruka_umino
     text: "If you rush straight in, you will take the **quickest** route."
   - speaker: iruka_umino
+    text: "That route is fast, but it is also the easiest one for somebody watching you to read."
+  - speaker: iruka_umino
     text: "Roll the wheel and you can lean that line `left` or `right` without changing where you end up."
   - speaker: naruto_uzumaki
     text: "Same tile. **Different approach.**"
+  - speaker: iruka_umino
+    text: "Exactly. An arc takes longer, but it is less predictable, and it can keep you clear of something sitting in the direct lane."
   - speaker: iruka_umino
     text: "Exactly. Take that tile again, but this time bring the line in from one side."
     wait: naruto_route_to_training_tile
@@ -32,6 +38,8 @@ dialogue:
   - speaker: iruka_umino
     text: "Press the wheel down once. That changes the line from a `short` bend to a `wide` one."
   - speaker: iruka_umino
+    text: "The wider the bend, the less obvious your approach becomes, but the more time you spend getting there."
+  - speaker: iruka_umino
     text: "Then roll it again if you need to choose which side opens up. Reach that far tile with a broad approach."
     wait: naruto_wide_route_to_far_tile
   - speaker: naruto_uzumaki
@@ -43,6 +51,8 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "So the path stays the same. I just cover it faster."
   - speaker: iruka_umino
+    text: "Exactly. Running is faster, but it is louder, rougher, and much easier to track."
+  - speaker: iruka_umino
     text: "Exactly. Hold on that tile and run it back."
     wait: naruto_run_back_to_training_tile
   - speaker: naruto_uzumaki
@@ -52,6 +62,8 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "So I just launch straight to the tile."
   - speaker: iruka_umino
+    text: "A jump can carry you over terrain and obstacles, but once you leave the ground, you are committed. No stopping. No changing direction."
+  - speaker: iruka_umino
     text: "Exactly. Take that far tile again, and do it with a jump."
     wait: naruto_jump_to_far_tile
   - speaker: naruto_uzumaki
@@ -60,6 +72,8 @@ dialogue:
     text: "And if you **hold the right button** instead of flicking it, you can skip the route entirely and use *teleportation jutsu*."
   - speaker: naruto_uzumaki
     text: "Hold it down, and I just vanish to the tile?"
+  - speaker: iruka_umino
+    text: "Exactly. It is instant and difficult to predict, but it costs chakra, and if you lean on it too hard, you lose awareness of the field around you."
   - speaker: iruka_umino
     text: "Exactly. Hold the right button and reappear on that training tile."
     wait: naruto_teleport_to_training_tile
@@ -82,6 +96,8 @@ dialogue:
   - speaker: iruka_umino
     text: "Then hover the post straight ahead. The red line will show you the throw."
   - speaker: iruka_umino
+    text: "A straight throw is the fastest way to send steel forward, but it is also the easiest throw in the world to anticipate."
+  - speaker: iruka_umino
     text: "When your aim is true, click the post and let it fly."
     wait: naruto_throw_shuriken_straight
   - speaker: naruto_uzumaki
@@ -90,6 +106,8 @@ dialogue:
     text: "Straight throws are the easy part. Now curve one in."
   - speaker: naruto_uzumaki
     text: "You want me to bend the throw the same way I bent my pathing?"
+  - speaker: iruka_umino
+    text: "Exactly. A curved throw is harder to read, and it can slip around something in the lane, but you pay for it in speed."
   - speaker: iruka_umino
     text: "Exactly. Keep the same target, but roll the wheel and bring the line in from one side."
   - speaker: iruka_umino
@@ -103,6 +121,8 @@ dialogue:
     text: "So this time I switch the family and swing it out before it closes?"
   - speaker: iruka_umino
     text: "Exactly. Press the wheel down once to change from a `short` arc to a `wide` one."
+  - speaker: iruka_umino
+    text: "The wider the throw, the stranger it looks, but the slower it arrives, and the less accurate it becomes."
   - speaker: iruka_umino
     text: "Then roll again to choose the side and hit the last post."
     wait: naruto_throw_shuriken_wide_arc
