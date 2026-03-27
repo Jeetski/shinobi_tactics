@@ -8,7 +8,7 @@ import { render_dialogue_markdown } from './dialogue_markdown';
 import './speech.css';
 
 type SpeechRendererProps = {
-  speaker_name: string;
+  speaker_name?: string | null;
   text: string;
   on_advance: () => void;
 };
@@ -105,7 +105,7 @@ export function SpeechRenderer({
           left: `${bubble_metrics.content.left}px`,
         }}
       >
-        <p className="speech-bubble__speaker">{speaker_name}</p>
+        {speaker_name ? <p className="speech-bubble__speaker">{speaker_name}</p> : null}
         <div className="speech-bubble__text">{render_dialogue_markdown(text)}</div>
         <div className="speech-bubble__actions" aria-hidden="true">
           <span className="speech-bubble__key speech-bubble__key--secondary">Esc</span>

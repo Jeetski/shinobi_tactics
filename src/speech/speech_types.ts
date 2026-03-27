@@ -1,5 +1,5 @@
 export type SpeechLine = {
-  speaker: string;
+  speaker?: string;
   text: string;
   wait?: string;
 };

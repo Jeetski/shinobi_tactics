@@ -251,3 +251,12 @@ Original prompt: okay now, the next step is probably making a reusable loading s
   - renamed the queue/ready wait keys to `naruto_queue_clone_jutsu` and `naruto_execute_clone_chain`
   - world effects now carry explicit lifetime metadata and fade/grow over time instead of only appearing statically
   - build passed with `npm run build`
+- Sexy-jutsu tutorial slice:
+  - added speaker-less instruction line support by making `SpeechLine.speaker` optional and hiding the speaker label when absent
+  - mirrored `sexy_jutsu_transformed_left.png` and `sexy_jutsu_transformed_right.png` into `public/resources/characters/naruto_uzumaki/academy_newbie/sprites/`
+  - added sexy-jutsu waits: `naruto_queue_infuse_chakra_for_sexy_jutsu`, `naruto_queue_sexy_jutsu`, `naruto_execute_sexy_jutsu_chain`
+  - sexy form now reuses Naruto's character slot with transformed sprites and `height_cm: 169`
+  - sexy-jutsu execution currently does: infuse chakra -> smoke + `disperse.mp3` -> transformed sexy pose
+  - the sexy pose clears on the next dialogue advance with another smoke + `disperse.mp3`
+  - appended new dialogue after the failed Transformation Jutsu: Iruka threatens extra study, Naruto snaps back, then the instructions appear as speaker-less setup lines
+  - build passed with `npm run build`

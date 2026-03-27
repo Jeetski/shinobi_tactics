@@ -206,3 +206,19 @@ dialogue:
     text: "Wh- What? Why didn't it change?!"
   - speaker: iruka_umino
     text: "Because you are still slacking off. If you keep this up, Naruto, you will never be a ninja."
+  - speaker: iruka_umino
+    text: "At this rate, you will be staying after practice and studying until something finally sticks."
+  - speaker: naruto_uzumaki
+    text: "Oh yeah? Then take *this*."
+  - text: "Open the jutsu panel and queue **Infuse Chakra** first."
+    wait: naruto_queue_infuse_chakra_for_sexy_jutsu
+  - text: "Now queue **Sexy Jutsu** after it."
+    wait: naruto_queue_sexy_jutsu
+  - text: "When your action chain is ready, click the **checkmark** to use it."
+    wait: naruto_execute_sexy_jutsu_chain
+  - speaker: naruto_uzumaki
+    text: "Hehe."
+  - speaker: iruka_umino
+    text: "Ugh... N-Naruto..."
+  - speaker: naruto_uzumaki
+    text: "Got ya. That's my Sexy Jutsu!"

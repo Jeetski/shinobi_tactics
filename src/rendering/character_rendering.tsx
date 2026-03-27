@@ -12,6 +12,8 @@ type RenderableCharacter = {
   world_position: WorldPoint;
   perspective_scale: number;
   sprite_mask?: CollisionMask;
+  rotation_deg?: number;
+  shadow_anchor_mode?: 'feet' | 'body';
 };
 
 export function render_projected_character({
@@ -19,6 +21,8 @@ export function render_projected_character({
   world_position,
   perspective_scale,
   sprite_mask,
+  rotation_deg = 0,
+  shadow_anchor_mode = 'feet',
 }: RenderableCharacter) {
   const screen_position = project_world_to_screen(world_position, default_projection_settings);
   const sprite_path = (() => {
@@ -34,12 +38,26 @@ export function render_projected_character({
         return character.defaults.sprite_front;
     }
   })();
-  const layout = build_character_layout(character, screen_position, perspective_scale, sprite_mask);
+  const layout = build_character_layout(
+    character,
+    screen_position,
+    perspective_scale,
+    sprite_mask,
+    shadow_anchor_mode,
+  );
 
   return (
-    <g key={character.id} pointerEvents="none">
+    <g
+      key={character.id}
+      pointerEvents="none"
+      transform={
+        rotation_deg === 0
+          ? undefined
+          : `rotate(${rotation_deg} ${layout.sprite_x + layout.sprite_width / 2} ${layout.sprite_y + layout.sprite_height / 2})`
+      }
+    >
       <ellipse
-        cx={layout.feet_x}
+        cx={layout.shadow_x}
         cy={layout.shadow_y}
         rx={layout.shadow_width / 2}
         ry={layout.shadow_height / 2}

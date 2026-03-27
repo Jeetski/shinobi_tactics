@@ -25,9 +25,11 @@ type TileCoord = {
 type MapViewProps = {
   scene: LoadedStageScene;
   active_speech_line?: {
-    speaker: string;
+    speaker?: string;
     text: string;
   } | null;
+  character_rotation_overrides?: Partial<Record<string, number>>;
+  character_shadow_anchor_modes?: Partial<Record<string, 'feet' | 'body'>>;
   on_advance_speech?: () => void;
   highlighted_tiles?: Array<{
     q: number;
@@ -82,6 +84,8 @@ const tile_hold_delay_ms = 220;
 export function MapView({
   scene,
   active_speech_line = null,
+  character_rotation_overrides = {},
+  character_shadow_anchor_modes = {},
   on_advance_speech,
   highlighted_tiles = [],
   highlighted_prop_ids = [],
@@ -313,6 +317,8 @@ export function MapView({
         sprite_mask,
         speaker_key: character.defaults.id.split('/')[0],
         character_layout: build_character_layout(character, screen_position, perspective_scale, sprite_mask),
+        rotation_deg: character_rotation_overrides[character.id] ?? 0,
+        shadow_anchor_mode: character_shadow_anchor_modes[character.id] ?? 'feet',
         x: screen_position.x,
         y: screen_position.y,
         depth: get_depth_sort_value(screen_position, world_position) + 500,
@@ -410,7 +416,7 @@ export function MapView({
       view_box_width: max_x - min_x + stroke_safe_padding * 2,
       view_box_height: max_y - min_y + stroke_safe_padding * 2,
     };
-  }, [character_facing_overrides, character_masks, character_world_overrides, highlighted_tiles, hovered_tile, prop_masks, scene]);
+  }, [character_facing_overrides, character_masks, character_rotation_overrides, character_shadow_anchor_modes, character_world_overrides, highlighted_tiles, hovered_tile, prop_masks, scene]);
 
   const frame_width = viewport_size.width - stage_padding_px * 2;
   const frame_height = viewport_size.height - stage_padding_px * 2;
@@ -419,7 +425,7 @@ export function MapView({
   const scale = Math.min(drawable_width / view_box_width, drawable_height / view_box_height);
   const svg_width = Math.floor(view_box_width * scale);
   const svg_height = Math.floor(view_box_height * scale);
-  const active_speaker_name = active_speech_line
+  const active_speaker_name = active_speech_line?.speaker
     ? {
         name:
           scene.characters.find(
@@ -710,6 +716,8 @@ export function MapView({
                 world_position: renderable.world_position,
                 perspective_scale: renderable.perspective_scale,
                 sprite_mask: renderable.sprite_mask,
+                rotation_deg: renderable.rotation_deg,
+                shadow_anchor_mode: renderable.shadow_anchor_mode,
               });
             })}
 
@@ -731,10 +739,10 @@ export function MapView({
           <span className="map-view__coord-title">Hover Tile</span>
           <span className="map-view__coord-value">{hovered_tile_label}</span>
         </div>
-        {active_speech_line && active_speaker_name && on_advance_speech ? (
+        {active_speech_line && on_advance_speech ? (
           <div className="speech-layer">
             <SpeechRenderer
-              speaker_name={active_speaker_name.name}
+              speaker_name={active_speaker_name?.name ?? null}
               text={active_speech_line.text}
               on_advance={on_advance_speech}
             />
