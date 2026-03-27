@@ -145,3 +145,24 @@ dialogue:
     text: "Better. That is what it looks like when you stop flailing and start thinking."
   - speaker: naruto_uzumaki
     text: "Yeah, yeah. I still made it."
+  - speaker: iruka_umino
+    text: "Good. Now open the jutsu panel. That is where your techniques are stored."
+  - speaker: iruka_umino
+    text: "And the bar above your inventory is your action chain. When you select a jutsu, it goes there first. It does not resolve on its own."
+  - speaker: naruto_uzumaki
+    text: "So I stack the techniques I want before I use them."
+  - speaker: iruka_umino
+    text: "Exactly. First, put **Infuse Chakra** into your action chain."
+    wait: naruto_queue_infuse_chakra_jutsu
+  - speaker: iruka_umino
+    text: "Good. Now queue *Clone Jutsu* after it."
+  - speaker: naruto_uzumaki
+    text: "Tch. That stupid jutsu? It never comes out right."
+  - speaker: iruka_umino
+    text: "Then stop sulking and set it properly. Put **Clone Jutsu** into your action chain."
+    wait: naruto_queue_clone_jutsu
+  - speaker: naruto_uzumaki
+    text: "Fine. I'll queue it. Then you'll see it isn't the jutsu that's stupid."
+  - speaker: iruka_umino
+    text: "Then stop talking and commit. When your chain is set, click the **checkmark** to execute it."
+    wait: naruto_execute_clone_chain

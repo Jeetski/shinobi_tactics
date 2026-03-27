@@ -154,3 +154,57 @@ Original prompt: okay now, the next step is probably making a reusable loading s
   - challenge countdown switches music to `dance.mp3`
   - challenge success shows `Mission Acomplished!`, plays `ill_do_it_right.mp3`, then returns to `daylight_of_konoha.mp3`
 - Mirrored `dance.mp3`, `ill_do_it_right.mp3`, and `daylight_of_konoha.mp3` into `public/resources/music/`.
+
+- HUD/jutsu tutorial slice:
+  - inventory bar is now 9 slots instead of 10
+  - added highlighted-slot support to `InventoryBar` so tutorial-required equipment can pulse
+  - added a new bottom HUD wrapper in `src/naruto_story/naruto_story.css`
+  - added a 3-slot `ActionQueueBar` under `src/hud/action_queue_bar.tsx`
+  - added a collapsible right-side `JutsuPanel` under `src/hud/jutsu_panel.tsx`
+  - added reusable collision-mask-aware HUD icon rendering under `src/hud/hud_icon.tsx`
+  - Naruto story now unlocks the jutsu UI when the shadow clone lesson begins
+  - added a new wait key `naruto_queue_shadow_clone_jutsu`
+  - clicking `Shadow Clone Jutsu` queues it into the next available action slot and fulfills the new wait
+  - shuriken slot now visually highlights during the first equip instruction
+  - shadow clone row now visually highlights during the new jutsu instruction
+  - appended the next in-character shadow clone dialogue beat to both intro dialogue YAML copies
+- Smoke check:
+  - build passed with `npm run build`
+  - Playwright page-load screenshot captured at `output/playwright/hud_refactor_smoke.png`
+- Jutsu prep follow-up:
+  - replaced placeholder jutsu icons with real runtime assets under `public/resources/jutsu/`
+  - added `Infuse Chakra` to the jutsu list and made it the first required action before queuing `Shadow Clone Jutsu`
+  - infused chakra bar now starts empty in the top-left status panel
+  - mirrored `handsign.wav` and `shadow_clone.mp3` into `public/resources/sfx/` for the next execution slice
+  - stopped intentionally before resolving jutsu effects; current implementation only teaches panel/queue setup and queuing the required jutsu in order
+- Shadow clone execution slice:
+  - mirrored Naruto `infuse_*.png` pose assets into `public/resources/characters/naruto_uzumaki/academy_newbie/sprites/`
+  - turned the action-chain checkmark into a real ready button
+  - added a new ready wait key `naruto_execute_shadow_clone_chain`
+  - ready button now highlights when Iruka tells Naruto to execute the chain
+  - clicking ready runs the queued `Infuse Chakra -> Shadow Clone Jutsu` sequence
+  - Naruto swaps into directional `infuse_*` sprites, then directional `clone_seal_*` sprites, with `handsign.wav` on each cast beat
+  - a temporary failed clone now spawns on a free adjacent tile, avoiding Iruka and stage props, and plays `shadow_clone.mp3`
+  - added the in-character failed-clone reaction exchange, then clears the clone and consumes the queued jutsu
+  - build passed with `npm run build`
+- Jutsu VFX follow-up:
+  - added procedural world-effect rendering under `src/rendering/world_effect_rendering.tsx`
+  - added a transparent blue chakra burst around Naruto during the infuse step
+  - added white smoke puffs when the failed clone appears and disappears
+  - threaded generic `world_effects` through `MapView` so future temporary combat/jutsu effects can reuse the same board overlay path
+  - build passed with `npm run build`
+- Jutsu VFX visibility fix:
+  - moved world effects above props/characters in the SVG draw stack so they are not buried under the actor layer
+  - increased chakra burst and smoke puff scale, opacity, and height offsets so they read clearly during the shadow clone sequence
+  - build passed with `npm run build`
+- Jutsu VFX rendering hardening:
+  - removed SVG SMIL animation dependence from the chakra burst and smoke puff effects
+  - world effects now render as plain static board shapes for their visible lifetime, which is more reliable in this React/SVG stack
+  - build passed with `npm run build`
+- Clone-jutsu cleanup:
+  - changed user-facing `Shadow Clone Jutsu` references to `Clone Jutsu`
+  - switched the jutsu panel icon to `public/resources/jutsu/e_rank/clone_jutsu.png`
+  - removed Naruto's extra clone-seal cast pose from the sequence, leaving only the infuse pose before clone creation
+  - renamed the queue/ready wait keys to `naruto_queue_clone_jutsu` and `naruto_execute_clone_chain`
+  - world effects now carry explicit lifetime metadata and fade/grow over time instead of only appearing statically
+  - build passed with `npm run build`

@@ -12,4 +12,5 @@ export type SpeechState = {
   wait_key: string | null;
   is_wait_satisfied: boolean;
   is_finished: boolean;
+  is_hidden: boolean;
 };

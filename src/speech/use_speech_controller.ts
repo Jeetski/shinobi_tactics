@@ -7,12 +7,14 @@ export function use_speech_controller(lines: SpeechLine[]) {
   const [active_index, set_active_index] = useState(0);
   const [visible_count, set_visible_count] = useState(0);
   const [is_finished, set_is_finished] = useState(lines.length === 0);
+  const [is_hidden, set_is_hidden] = useState(false);
   const [fulfilled_waits, set_fulfilled_waits] = useState<Record<string, true>>({});
 
   useEffect(() => {
     set_active_index(0);
     set_visible_count(0);
     set_is_finished(lines.length === 0);
+    set_is_hidden(false);
     set_fulfilled_waits({});
   }, [lines]);
 
@@ -44,19 +46,31 @@ export function use_speech_controller(lines: SpeechLine[]) {
 
       if (event.key === 'Enter') {
         event.preventDefault();
+        if (is_hidden) {
+          set_is_hidden(false);
+          return;
+        }
         advance();
         return;
       }
 
       if (event.key === 'Escape') {
         event.preventDefault();
-        skip();
+        dismiss();
       }
     };
 
     window.addEventListener('keydown', handle_key_down);
     return () => window.removeEventListener('keydown', handle_key_down);
-  }, [active_line, visible_count]);
+  }, [active_line, is_hidden, visible_count]);
+
+  useEffect(() => {
+    if (!active_line || is_finished) {
+      return;
+    }
+
+    set_is_hidden(false);
+  }, [active_index, active_line, is_finished]);
 
   useEffect(() => {
     if (!active_line || visible_count < active_line.text.length || !active_line.wait) {
@@ -98,8 +112,8 @@ export function use_speech_controller(lines: SpeechLine[]) {
     set_visible_count(0);
   }
 
-  function skip() {
-    set_is_finished(true);
+  function dismiss() {
+    set_is_hidden(true);
   }
 
   function fulfill_wait(wait_key: string) {
@@ -125,12 +139,13 @@ export function use_speech_controller(lines: SpeechLine[]) {
     wait_key: active_line?.wait ?? null,
     is_wait_satisfied: active_wait_satisfied,
     is_finished,
+    is_hidden,
   };
 
   return {
     speech_state,
     advance,
     fulfill_wait,
-    skip,
+    dismiss,
   };
 }

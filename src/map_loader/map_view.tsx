@@ -11,7 +11,7 @@ import {
   project_world_to_screen,
   type WorldPoint,
 } from '../projection';
-import { build_character_layout, render_projected_character, render_projected_path_preview, render_projected_projectile, render_projected_prop, render_projected_tile, TileRenderDefs } from '../rendering';
+import { build_character_layout, render_projected_character, render_projected_path_preview, render_projected_projectile, render_projected_prop, render_projected_tile, render_projected_world_effect, TileRenderDefs, type WorldEffectRenderable } from '../rendering';
 import { build_prop_layout } from '../entities/prop_layout';
 import { SpeechRenderer } from '../speech';
 import './map_view.css';
@@ -71,6 +71,7 @@ type MapViewProps = {
     offset_y: number;
     offset_z: number;
   }>;
+  world_effects?: WorldEffectRenderable[];
 };
 
 const stage_padding_px = 18;
@@ -101,6 +102,7 @@ export function MapView({
   path_preview = null,
   projectiles = [],
   prop_effects = [],
+  world_effects = [],
 }: MapViewProps) {
   const [viewport_size, set_viewport_size] = useState(() => ({
     width: window.innerWidth,
@@ -110,6 +112,7 @@ export function MapView({
   const [prop_masks, set_prop_masks] = useState<Record<string, CollisionMask>>({});
   const [effect_masks, set_effect_masks] = useState<Record<string, CollisionMask>>({});
   const [hovered_tile, set_hovered_tile] = useState<TileCoord | null>(null);
+  const [world_effect_now_ms, set_world_effect_now_ms] = useState(() => window.performance.now());
   const hold_timer_ref = useRef<ReturnType<typeof window.setTimeout> | null>(null);
   const hold_fired_coord_ref = useRef<string | null>(null);
   const right_hold_timer_ref = useRef<ReturnType<typeof window.setTimeout> | null>(null);
@@ -231,6 +234,18 @@ export function MapView({
       }
     };
   }, []);
+
+  useEffect(() => {
+    if (world_effects.length === 0) {
+      return;
+    }
+
+    const interval_id = window.setInterval(() => {
+      set_world_effect_now_ms(window.performance.now());
+    }, 33);
+
+    return () => window.clearInterval(interval_id);
+  }, [world_effects.length]);
 
   const {
     renderables,
@@ -697,6 +712,19 @@ export function MapView({
                 sprite_mask: renderable.sprite_mask,
               });
             })}
+
+            {world_effects.map((effect) =>
+              render_projected_world_effect(
+                effect,
+                get_perspective_scale(
+                  project_world_to_screen(effect.world_position, default_projection_settings).y,
+                  min_projected_y(scene),
+                  max_projected_y(scene),
+                  default_projection_settings,
+                ),
+                world_effect_now_ms,
+              ),
+            )}
           </g>
         </svg>
         <div className="map-view__coord-readout" aria-live="polite">

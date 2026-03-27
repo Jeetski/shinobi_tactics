@@ -29,6 +29,17 @@
   align-items: center;
 }
 
+.naruto-story__bottom-hud {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  z-index: 6;
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  transform: translateX(-50%);
+}
+
 .naruto-story__challenge-timer {
   position: absolute;
   top: 1.2rem;
