@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { getContainedOpaqueBounds, loadCollisionMask, type CollisionMask } from '../lib/collision_mask';
+import { replaceAudioSettings, useAudioSettings } from '../audio';
 import './main_menu.css';
 import {
   copy_layout_css,
@@ -28,6 +29,7 @@ type MainMenuProps = {
 };
 
 export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProps) {
+  const audio_settings = useAudioSettings();
   const [menu_screen, set_menu_screen] = useState<MenuScreen>('main');
   const [selected_index, set_selected_index] = useState(0);
   const [petal_frame, set_petal_frame] = useState(0);
@@ -37,6 +39,10 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
   const [layout_mode, set_layout_mode] = useState(false);
   const [layout_message, set_layout_message] = useState<string | null>(null);
   const [layout_positions, set_layout_positions] = useState<LayoutPositions>(default_layout_positions);
+  const [settings_popup_open, set_settings_popup_open] = useState(false);
+  const [draft_music_volume, set_draft_music_volume] = useState(audio_settings.music_volume);
+  const [draft_sfx_volume, set_draft_sfx_volume] = useState(audio_settings.sfx_volume);
+  const [draft_vox_volume, set_draft_vox_volume] = useState(audio_settings.vox_volume);
   const menu_stage_ref = useRef<HTMLElement | null>(null);
   const scroll_button_ref = useRef<HTMLButtonElement | null>(null);
   const paper_unfurl_ref = useRef<HTMLDivElement | null>(null);
@@ -82,11 +88,30 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
       }
     };
 
-    audio.volume = 0.45;
+    audio.volume = 0.45 * (audio_settings.music_volume / 100);
     audio.src = music_tracks[music_track_index];
     audio.load();
     void try_play();
-  }, [music_track_index, music_tracks]);
+  }, [audio_settings.music_volume, music_track_index, music_tracks]);
+
+  useEffect(() => {
+    const audio = music_ref.current;
+    if (!audio) {
+      return;
+    }
+
+    audio.volume = 0.45 * (audio_settings.music_volume / 100);
+  }, [audio_settings.music_volume]);
+
+  useEffect(() => {
+    if (!settings_popup_open) {
+      return;
+    }
+
+    set_draft_music_volume(audio_settings.music_volume);
+    set_draft_sfx_volume(audio_settings.sfx_volume);
+    set_draft_vox_volume(audio_settings.vox_volume);
+  }, [audio_settings.music_volume, audio_settings.sfx_volume, audio_settings.vox_volume, settings_popup_open]);
 
   useEffect(() => {
     const audio = music_ref.current;
@@ -130,6 +155,12 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
       }
 
       if (event.key === 'Escape') {
+        if (settings_popup_open) {
+          event.preventDefault();
+          close_settings_popup();
+          return;
+        }
+
         if (menu_screen !== 'main') {
           event.preventDefault();
           navigate_back();
@@ -138,17 +169,31 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
       }
 
       if (event.key === 'Enter') {
+        if (settings_popup_open) {
+          event.preventDefault();
+          save_settings_popup();
+          return;
+        }
+
         event.preventDefault();
         activate_selected_option();
         return;
       }
 
       if (event.key === 'ArrowDown') {
+        if (settings_popup_open) {
+          return;
+        }
+
         event.preventDefault();
         set_selected_index((current) => (current + 1) % current_menu_options.length);
       }
 
       if (event.key === 'ArrowUp') {
+        if (settings_popup_open) {
+          return;
+        }
+
         event.preventDefault();
         set_selected_index((current) => (current - 1 + current_menu_options.length) % current_menu_options.length);
       }
@@ -156,7 +201,7 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
 
     window.addEventListener('keydown', handle_key_down);
     return () => window.removeEventListener('keydown', handle_key_down);
-  }, [current_menu_options.length, is_enabled, layout_mode, menu_screen, selected_option.id]);
+  }, [current_menu_options.length, is_enabled, layout_mode, menu_screen, selected_option.id, settings_popup_open]);
 
   useEffect(() => {
     let cancelled = false;
@@ -309,6 +354,14 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
       return;
     }
 
+    if (menu_screen === 'main' && selected_option.id === 'settings') {
+      set_settings_popup_open(true);
+      set_draft_music_volume(audio_settings.music_volume);
+      set_draft_sfx_volume(audio_settings.sfx_volume);
+      set_draft_vox_volume(audio_settings.vox_volume);
+      return;
+    }
+
     if (menu_screen === 'story' && selected_option.id === 'new_game') {
       set_menu_screen('new_game');
       set_selected_index(0);
@@ -346,6 +399,22 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
       set_menu_screen('main');
       set_selected_index(get_main_menu_studio_index());
     }
+  }
+
+  function close_settings_popup() {
+    set_settings_popup_open(false);
+    set_draft_music_volume(audio_settings.music_volume);
+    set_draft_sfx_volume(audio_settings.sfx_volume);
+    set_draft_vox_volume(audio_settings.vox_volume);
+  }
+
+  function save_settings_popup() {
+    replaceAudioSettings({
+      music_volume: draft_music_volume,
+      sfx_volume: draft_sfx_volume,
+      vox_volume: draft_vox_volume,
+    });
+    set_settings_popup_open(false);
   }
 
   return (
@@ -520,6 +589,67 @@ export function MainMenu({ is_enabled = true, on_naruto_selected }: MainMenuProp
             </div>
           </div>
         </div>
+
+        {settings_popup_open ? (
+          <div className="settings-popup-backdrop" role="presentation">
+            <div className="settings-popup" role="dialog" aria-modal="true" aria-label="Settings">
+              <img className="settings-popup__paper" src="/resources/UI/main_menu/paper.png" alt="" />
+              <div className="settings-popup__content">
+                <h2>Settings</h2>
+
+                <label className="settings-popup__field">
+                  <span>Music Volume</span>
+                  <div className="settings-popup__slider-row">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={draft_music_volume}
+                      onChange={(event) => set_draft_music_volume(Number(event.target.value))}
+                    />
+                    <strong>{draft_music_volume}</strong>
+                  </div>
+                </label>
+
+                <label className="settings-popup__field">
+                  <span>SFX Volume</span>
+                  <div className="settings-popup__slider-row">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={draft_sfx_volume}
+                      onChange={(event) => set_draft_sfx_volume(Number(event.target.value))}
+                    />
+                    <strong>{draft_sfx_volume}</strong>
+                  </div>
+                </label>
+
+                <label className="settings-popup__field">
+                  <span>VOX Volume</span>
+                  <div className="settings-popup__slider-row">
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      step={1}
+                      value={draft_vox_volume}
+                      onChange={(event) => set_draft_vox_volume(Number(event.target.value))}
+                    />
+                    <strong>{draft_vox_volume}</strong>
+                  </div>
+                </label>
+
+                <div className="settings-popup__actions">
+                  <button type="button" onClick={close_settings_popup}>Back</button>
+                  <button type="button" onClick={save_settings_popup}>Save</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </section>
     </main>
   );

@@ -552,6 +552,10 @@ export function MapView({
                   event.stopPropagation();
                   on_prop_hover?.(renderable.prop.id);
                 }}
+                onMouseMove={(event) => {
+                  event.stopPropagation();
+                  on_prop_hover?.(renderable.prop.id);
+                }}
                 onMouseLeave={(event) => {
                   event.stopPropagation();
                   on_prop_hover?.(null);
@@ -586,112 +590,114 @@ export function MapView({
             );
           })}
 
-          <g filter="url(#platform-shadow-blur)">
+          <g pointerEvents="none">
+            <g filter="url(#platform-shadow-blur)">
+              {renderables.map((renderable) => {
+                if (renderable.render_kind !== 'tile') {
+                  return null;
+                }
+
+                return render_projected_tile({
+                  coord: renderable.coord,
+                  tile: renderable.tile,
+                  world_position: renderable.world_position,
+                  depth_ratio: renderable.depth_ratio,
+                  is_highlighted: renderable.is_highlighted,
+                  is_hovered: renderable.is_hovered,
+                });
+              })}
+            </g>
+
             {renderables.map((renderable) => {
-              if (renderable.render_kind !== 'tile') {
+              if (renderable.render_kind === 'tile') {
+                return render_projected_tile({
+                  coord: renderable.coord,
+                  tile: renderable.tile,
+                  world_position: renderable.world_position,
+                  depth_ratio: renderable.depth_ratio,
+                  is_highlighted: renderable.is_highlighted,
+                  is_hovered: renderable.is_hovered,
+                });
+              }
+
+              return null;
+            })}
+
+            {renderables.map((renderable) => {
+              if (renderable.render_kind !== 'prop') {
                 return null;
               }
 
-              return render_projected_tile({
-                coord: renderable.coord,
-                tile: renderable.tile,
+              if (!highlighted_prop_ids.includes(renderable.prop.id)) {
+                return null;
+              }
+
+              return render_prop_tile_highlight(renderable.prop.coord, prop_highlight_tone, renderable.prop.id);
+            })}
+
+            {path_preview ? render_projected_path_preview(path_preview) : null}
+
+            {projectiles.map((projectile) =>
+              render_projected_projectile(
+                projectile,
+                get_perspective_scale(
+                  project_world_to_screen(projectile.world_position, default_projection_settings).y,
+                  min_projected_y(scene),
+                  max_projected_y(scene),
+                  default_projection_settings,
+                ),
+                effect_masks[projectile.sprite],
+              ),
+            )}
+
+            {renderables.map((renderable) => {
+              if (renderable.render_kind === 'tile') {
+                return null;
+              }
+
+              if (renderable.render_kind === 'prop') {
+                return (
+                  <g key={renderable.prop.id}>
+                    {render_projected_prop({
+                      prop: renderable.prop,
+                      world_position: renderable.world_position,
+                      perspective_scale: renderable.perspective_scale,
+                      sprite_mask: renderable.sprite_mask,
+                    })}
+                    {prop_effects
+                      .filter((effect) => effect.prop_id === renderable.prop.id)
+                      .map((effect) =>
+                        render_projected_projectile(
+                          {
+                            id: effect.id,
+                            sprite: effect.sprite,
+                            size_m: effect.size_m,
+                            rotation_deg: effect.rotation_deg,
+                            world_position: {
+                              x: renderable.world_position.x + effect.offset_x,
+                              y:
+                                renderable.world_position.y
+                                - default_projection_settings.tile_radius * 0.14
+                                + effect.offset_y,
+                              z: renderable.world_position.z + effect.offset_z,
+                            },
+                          },
+                          renderable.perspective_scale,
+                          effect_masks[effect.sprite],
+                        ),
+                      )}
+                  </g>
+                );
+              }
+
+              return render_projected_character({
+                character: renderable.character,
                 world_position: renderable.world_position,
-                depth_ratio: renderable.depth_ratio,
-                is_highlighted: renderable.is_highlighted,
-                is_hovered: renderable.is_hovered,
+                perspective_scale: renderable.perspective_scale,
+                sprite_mask: renderable.sprite_mask,
               });
             })}
           </g>
-
-          {renderables.map((renderable) => {
-            if (renderable.render_kind === 'tile') {
-              return render_projected_tile({
-                coord: renderable.coord,
-                tile: renderable.tile,
-                world_position: renderable.world_position,
-                depth_ratio: renderable.depth_ratio,
-                is_highlighted: renderable.is_highlighted,
-                is_hovered: renderable.is_hovered,
-              });
-            }
-
-            return null;
-          })}
-
-          {renderables.map((renderable) => {
-            if (renderable.render_kind !== 'prop') {
-              return null;
-            }
-
-            if (!highlighted_prop_ids.includes(renderable.prop.id)) {
-              return null;
-            }
-
-            return render_prop_tile_highlight(renderable.prop.coord, prop_highlight_tone, renderable.prop.id);
-          })}
-
-          {path_preview ? render_projected_path_preview(path_preview) : null}
-
-          {projectiles.map((projectile) =>
-            render_projected_projectile(
-              projectile,
-              get_perspective_scale(
-                project_world_to_screen(projectile.world_position, default_projection_settings).y,
-                min_projected_y(scene),
-                max_projected_y(scene),
-                default_projection_settings,
-              ),
-              effect_masks[projectile.sprite],
-            ),
-          )}
-
-          {renderables.map((renderable) => {
-            if (renderable.render_kind === 'tile') {
-              return null;
-            }
-
-            if (renderable.render_kind === 'prop') {
-              return (
-                <g key={renderable.prop.id}>
-                  {render_projected_prop({
-                    prop: renderable.prop,
-                    world_position: renderable.world_position,
-                    perspective_scale: renderable.perspective_scale,
-                    sprite_mask: renderable.sprite_mask,
-                  })}
-                  {prop_effects
-                    .filter((effect) => effect.prop_id === renderable.prop.id)
-                    .map((effect) =>
-                      render_projected_projectile(
-                        {
-                          id: effect.id,
-                          sprite: effect.sprite,
-                          size_m: effect.size_m,
-                          rotation_deg: effect.rotation_deg,
-                          world_position: {
-                            x: renderable.world_position.x + effect.offset_x,
-                            y:
-                              renderable.world_position.y
-                              - default_projection_settings.tile_radius * 0.14
-                              + effect.offset_y,
-                            z: renderable.world_position.z + effect.offset_z,
-                          },
-                        },
-                        renderable.perspective_scale,
-                        effect_masks[effect.sprite],
-                      ),
-                    )}
-                </g>
-              );
-            }
-
-            return render_projected_character({
-              character: renderable.character,
-              world_position: renderable.world_position,
-              perspective_scale: renderable.perspective_scale,
-              sprite_mask: renderable.sprite_mask,
-            });
-          })}
         </svg>
         <div className="map-view__coord-readout" aria-live="polite">
           <span className="map-view__coord-title">Hover Tile</span>

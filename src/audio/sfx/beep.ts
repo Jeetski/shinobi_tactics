@@ -1,3 +1,5 @@
+import { getAudioSettings } from '../settings';
+
 let shared_audio_context: AudioContext | null = null;
 let unlock_listeners_installed = false;
 
@@ -14,6 +16,8 @@ export function play_beep({
   if (!audio_context) {
     return;
   }
+  const { sfx_volume } = getAudioSettings();
+  const effective_gain = gain * (sfx_volume / 100);
 
   const schedule_beep = () => {
     const oscillator = audio_context.createOscillator();
@@ -26,7 +30,7 @@ export function play_beep({
     oscillator.frequency.exponentialRampToValueAtTime(Math.max(160, frequency * 0.92), end_time);
 
     gain_node.gain.setValueAtTime(0.0001, now);
-    gain_node.gain.exponentialRampToValueAtTime(gain, now + 0.012);
+    gain_node.gain.exponentialRampToValueAtTime(Math.max(0.0001, effective_gain), now + 0.012);
     gain_node.gain.exponentialRampToValueAtTime(0.0001, end_time);
 
     oscillator.connect(gain_node);

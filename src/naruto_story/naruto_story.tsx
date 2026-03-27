@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { InventoryBar } from '../hud/inventory_bar';
 import { UnitStatusPanel } from '../hud/unit_status_panel';
-import { play_beep, play_sfx, start_looping_sfx, stop_looping_sfx, useMusicController } from '../audio';
+import { play_beep, play_sfx, play_vox, start_looping_sfx, stop_looping_sfx, useMusicController } from '../audio';
 import { load_stage_scene, MapView, type LoadedStageScene } from '../map_loader';
 import type { CharacterFacing, HexCoord, LoadedStageProp } from '../map_loader/map_types';
 import { build_path_family_variant, build_shortest_path, key_hex, type PathFamily, type PathVariant } from '../movement';
@@ -52,6 +52,10 @@ const projectile_throw_sfx_path = '/resources/sfx/projectile_weapon_throw.wav';
 const projectile_hit_sfx_path = '/resources/sfx/projectile_weapon_hit.mp3';
 const walk_loop_sfx_path = '/resources/sfx/walk.wav';
 const run_loop_sfx_path = '/resources/sfx/run.wav';
+const jump_sfx_path = '/resources/sfx/jump.mp3';
+const here_vox_path = '/resources/vox/naruto_uzumaki/part_1/here.mp3';
+const here_i_go_vox_path = '/resources/vox/naruto_uzumaki/part_1/here_i_go.mp3';
+const lucky_me_vox_path = '/resources/vox/naruto_uzumaki/part_1/lucky_me.mp3';
 const movement_loop_sfx_key = 'naruto-story-movement';
 
 type MoveInputType = 'click' | 'hold' | 'right_click' | 'right_hold';
@@ -506,6 +510,7 @@ export function NarutoStory() {
 
     if (countdown_stage === 'GO') {
       play_beep({ frequency: 1160, duration_ms: 260, gain: 0.08 });
+      play_vox(here_i_go_vox_path, 0.92);
       return;
     }
 
@@ -548,6 +553,43 @@ export function NarutoStory() {
     danger_beep_step_ref.current = seconds_remaining;
     play_beep({ frequency: 720, duration_ms: 85, gain: 0.052 });
   }, [challenge_state.phase, challenge_timer_remaining, is_challenge_active]);
+
+  useEffect(() => {
+    if (
+      !is_challenge_active ||
+      challenge_state.phase !== 'throw' ||
+      !challenge_state.target_prop_id ||
+      selected_inventory_item?.icon !== shuriken_icon_path
+    ) {
+      return;
+    }
+
+    set_hovered_target_prop_id(challenge_state.target_prop_id);
+  }, [challenge_state.phase, challenge_state.target_prop_id, is_challenge_active, selected_inventory_item]);
+
+  useEffect(() => {
+    if (
+      !is_challenge_active ||
+      challenge_state.phase !== 'throw' ||
+      !challenge_target_prop ||
+      selected_inventory_item?.icon !== shuriken_icon_path ||
+      !naruto_current_coord
+    ) {
+      return;
+    }
+
+    set_hovered_target_prop_id(challenge_target_prop.id);
+    set_character_facing_overrides((current) => ({
+      ...current,
+      [naruto_character_id]: get_facing_for_step(naruto_current_coord, challenge_target_prop.coord),
+    }));
+  }, [
+    challenge_state.phase,
+    challenge_target_prop,
+    is_challenge_active,
+    naruto_current_coord,
+    selected_inventory_item,
+  ]);
 
   const active_preview_path = useMemo(() => {
     if (!stage_scene || !naruto_current_coord) {
@@ -596,7 +638,6 @@ export function NarutoStory() {
       is_challenge_active &&
       challenge_state.phase === 'throw' &&
       challenge_target_prop &&
-      hovered_target_prop_id === challenge_target_prop.id &&
       selected_inventory_item?.icon === shuriken_icon_path
     ) {
       if (active_path_variant === 'shortest') {
@@ -808,6 +849,7 @@ export function NarutoStory() {
       const next_round_index = current.round_index + 1;
       if (next_round_index >= challenge_round_count) {
         set_challenge_success_banner_visible(true);
+        play_vox(lucky_me_vox_path, 0.96);
         void play_stinger(success_music_path, {
           resume_track_path: stage_scene?.music_path ?? null,
           on_end: () => {
@@ -840,14 +882,16 @@ export function NarutoStory() {
     }
 
     set_character_moving(set_moving_characters, character_id, true);
-    if (character_id === naruto_character_id) {
-      if (move_speed === 'walk') {
-        start_looping_sfx(movement_loop_sfx_key, walk_loop_sfx_path, 0.46);
-      } else if (move_speed === 'run') {
-        start_looping_sfx(movement_loop_sfx_key, run_loop_sfx_path, 0.5);
-      } else {
-        stop_looping_sfx(movement_loop_sfx_key);
-      }
+    const movement_loop_key = `${movement_loop_sfx_key}:${character_id}`;
+    if (move_speed === 'walk') {
+      start_looping_sfx(movement_loop_key, walk_loop_sfx_path, 0.46);
+    } else if (move_speed === 'run' && character_id === naruto_character_id) {
+      start_looping_sfx(movement_loop_key, run_loop_sfx_path, 0.5);
+    } else if (move_speed === 'jump' && character_id === naruto_character_id) {
+      stop_looping_sfx(movement_loop_key);
+      play_sfx(jump_sfx_path, 0.72);
+    } else {
+      stop_looping_sfx(movement_loop_key);
     }
     const segment_duration_ms =
       move_speed === 'run'
@@ -869,9 +913,7 @@ export function NarutoStory() {
         set_character_world_override(set_character_world_overrides, character_id, null);
         set_character_coord_override(set_character_coord_overrides, character_id, path[path.length - 1] ?? null);
         set_character_moving(set_moving_characters, character_id, false);
-        if (character_id === naruto_character_id) {
-          stop_looping_sfx(movement_loop_sfx_key);
-        }
+        stop_looping_sfx(movement_loop_key);
         on_complete();
         return;
       }
@@ -904,9 +946,7 @@ export function NarutoStory() {
 
         if (segment_index + 1 >= path.length - 1) {
           set_character_moving(set_moving_characters, character_id, false);
-          if (character_id === naruto_character_id) {
-            stop_looping_sfx(movement_loop_sfx_key);
-          }
+          stop_looping_sfx(movement_loop_key);
           on_complete();
           return;
         }
@@ -931,9 +971,7 @@ export function NarutoStory() {
     }
 
     set_character_moving(set_moving_characters, character_id, true);
-    if (character_id === naruto_character_id) {
-      stop_looping_sfx(movement_loop_sfx_key);
-    }
+    stop_looping_sfx(`${movement_loop_sfx_key}:${character_id}`);
     set_character_facing_override(set_character_facing_overrides, character_id, get_facing_for_step(current_coord, coord));
     set_character_world_override(set_character_world_overrides, character_id, null);
     set_character_coord_override(set_character_coord_overrides, character_id, coord);
@@ -948,6 +986,16 @@ export function NarutoStory() {
     set_hovered_destination_tile(null);
     set_active_path_family('short');
     set_active_path_variant('shortest');
+  };
+
+  const fulfill_movement_wait = (fallback_wait_key: string) => {
+    const resolved_wait_key = speech_state.wait_key ?? fallback_wait_key;
+
+    if (resolved_wait_key === move_wait_key) {
+      play_vox(here_vox_path, 0.92);
+    }
+
+    fulfill_wait(resolved_wait_key);
   };
 
   const attempt_move = (coord: HexCoord, input_type: MoveInputType) => {
@@ -1019,7 +1067,7 @@ export function NarutoStory() {
     if (input_type === 'right_click' && active_objective.move_speed === 'jump') {
       clear_path_preview_selection();
       hop_along_path(naruto_character_id, [naruto_current_coord, active_objective.target], 'jump', () => {
-        fulfill_wait(speech_state.wait_key ?? jump_wait_key);
+        fulfill_movement_wait(jump_wait_key);
       });
       return;
     }
@@ -1027,7 +1075,7 @@ export function NarutoStory() {
     if (input_type === 'right_hold' && active_objective.move_speed === 'teleport') {
       clear_path_preview_selection();
       teleport_to_coord(naruto_character_id, active_objective.target, () => {
-        fulfill_wait(speech_state.wait_key ?? teleport_wait_key);
+        fulfill_movement_wait(teleport_wait_key);
       });
       return;
     }
@@ -1050,14 +1098,14 @@ export function NarutoStory() {
 
       clear_path_preview_selection();
       hop_along_path(naruto_character_id, active_preview_path, active_objective.move_speed ?? 'walk', () => {
-        fulfill_wait(speech_state.wait_key ?? route_wait_key);
+        fulfill_movement_wait(route_wait_key);
       });
       return;
     }
 
     clear_path_preview_selection();
     hop_along_path(naruto_character_id, [naruto_current_coord, active_objective.target], active_objective.move_speed ?? 'walk', () => {
-      fulfill_wait(speech_state.wait_key ?? move_wait_key);
+      fulfill_movement_wait(move_wait_key);
     });
   };
 
@@ -1232,6 +1280,12 @@ export function NarutoStory() {
     if (!show_path_preview || is_naruto_moving || is_override_dialogue_active) {
       set_hovered_target_prop_id(null);
       return;
+    }
+
+    if (is_challenge_active && challenge_state.phase === 'throw' && challenge_state.target_prop_id) {
+      if (prop_id === null) {
+        return;
+      }
     }
 
     const active_prop_id =

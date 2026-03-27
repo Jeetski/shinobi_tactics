@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef } from 'react';
+import { useAudioSettings } from '../settings';
 
 type PlayTrackOptions = {
   restart?: boolean;
@@ -10,6 +11,7 @@ type PlayStingerOptions = {
 };
 
 export function useMusicController(volume = 0.42) {
+  const audio_settings = useAudioSettings();
   const audio_ref = useRef<HTMLAudioElement | null>(null);
   const looping_track_ref = useRef<string | null>(null);
   const pending_unlock_play_ref = useRef(false);
@@ -25,8 +27,8 @@ export function useMusicController(volume = 0.42) {
       return;
     }
 
-    audio.volume = volume;
-  }, [volume]);
+    audio.volume = volume * (audio_settings.music_volume / 100);
+  }, [audio_settings.music_volume, volume]);
 
   useEffect(() => {
     const try_resume = async () => {

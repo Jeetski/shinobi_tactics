@@ -317,6 +317,103 @@ button {
   letter-spacing: 0.1em;
 }
 
+.settings-popup-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  background: rgba(8, 3, 2, 0.34);
+  backdrop-filter: blur(4px);
+}
+
+.settings-popup {
+  position: relative;
+  width: min(38rem, 78vw);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+}
+
+.settings-popup__paper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  filter: drop-shadow(0 28px 44px rgba(0, 0, 0, 0.34));
+}
+
+.settings-popup__content {
+  position: relative;
+  z-index: 1;
+  width: 72%;
+  display: grid;
+  gap: 1.35rem;
+  color: var(--paper-ink);
+}
+
+.settings-popup__content h2 {
+  margin: 0;
+  text-align: center;
+  text-transform: uppercase;
+  font-family: "Naruto", Georgia, "Times New Roman", serif;
+  font-size: clamp(2rem, 3vw, 2.9rem);
+  letter-spacing: 0.1em;
+}
+
+.settings-popup__field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.settings-popup__field span {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.settings-popup__slider-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.settings-popup__slider-row input[type="range"] {
+  width: 100%;
+  accent-color: #6f3a1a;
+}
+
+.settings-popup__slider-row strong {
+  min-width: 2.2rem;
+  text-align: right;
+  font-size: 1rem;
+}
+
+.settings-popup__actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 0.4rem;
+}
+
+.settings-popup__actions button {
+  min-width: 7rem;
+  padding: 0.6rem 1rem;
+  border: 1px solid rgba(69, 28, 11, 0.28);
+  background: rgba(255, 244, 214, 0.35);
+  color: var(--paper-ink);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.settings-popup__actions button:hover,
+.settings-popup__actions button:focus-visible {
+  background: rgba(255, 244, 214, 0.52);
+}
+
 @keyframes background-breathe {
   from {
     transform: scale(1.03) translate3d(0, 0, 0);
