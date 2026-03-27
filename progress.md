@@ -198,6 +198,28 @@ Original prompt: okay now, the next step is probably making a reusable loading s
   - increased chakra burst and smoke puff scale, opacity, and height offsets so they read clearly during the shadow clone sequence
   - build passed with `npm run build`
 - Jutsu VFX rendering hardening:
+ - Substitution-jutsu prep/execution slice:
+   - mirrored `public/resources/jutsu/e_rank/substitution_log.png`
+   - added substitution tutorial dialogue beats after clone jutsu:
+     - queue `Infuse Chakra`
+     - queue `Substitution Jutsu`
+     - choose a reappearance tile
+     - click the ready checkmark
+   - action queue now supports non-jutsu action entries, and the substitution destination is shown as a third queue slot with a white footstep icon
+   - ready button routing is now wait-aware:
+     - clone chain executes on `naruto_execute_clone_chain`
+     - substitution chain executes on `naruto_execute_substitution_chain`
+   - added transient dialogue support for non-blocking one-line reactions such as Naruto yelling `Yikes!`
+   - substitution execution now works:
+     - Naruto infuses chakra with the existing pose/effect
+     - Iruka throws a shuriken at Naruto
+     - on impact, smoke appears, Naruto is hidden, a substitution log with a stuck shuriken appears, then drops/tips over
+     - Naruto reappears at the chosen destination in a second smoke puff
+   - temporary substitution visuals reuse the existing projected projectile/world-sprite path rather than adding a separate renderer
+   - `npm run build` passes after the substitution implementation
+ - TODO:
+   - manually tune substitution log fall timing/rotation/size in-browser if it feels too floaty or too abrupt
+   - decide whether successful substitution should consume/fill chakra bars yet, or whether those bars stay mostly tutorial-display-only for now
   - removed SVG SMIL animation dependence from the chakra burst and smoke puff effects
   - world effects now render as plain static board shapes for their visible lifetime, which is more reliable in this React/SVG stack
   - build passed with `npm run build`

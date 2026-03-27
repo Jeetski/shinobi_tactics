@@ -25,12 +25,12 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "Same tile. **Different approach.**"
   - speaker: iruka_umino
-    text: "Exactly. An arc takes longer, but it is less predictable, and it can keep you clear of something sitting in the direct lane."
+    text: "Good. An arc takes longer, but it is less predictable, and it can keep you clear of something sitting in the direct lane."
   - speaker: iruka_umino
-    text: "Exactly. Take that tile again, but this time bring the line in from one side."
+    text: "Now prove it. Take that tile again, but this time bring the line in from one side."
     wait: naruto_route_to_training_tile
   - speaker: iruka_umino
-    text: "Exactly. Your destination is only half the decision. Your approach is the other half."
+    text: "You see? Your destination is only half the decision. Your approach is the other half."
   - speaker: iruka_umino
     text: "Now take your swing wider."
   - speaker: naruto_uzumaki
@@ -51,9 +51,9 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "So the path stays the same. I just cover it faster."
   - speaker: iruka_umino
-    text: "Exactly. Running is faster, but it is louder, rougher, and much easier to track."
+    text: "That's it. Running is faster, but it is louder, rougher, and much easier to track."
   - speaker: iruka_umino
-    text: "Exactly. Hold on that tile and run it back."
+    text: "Go on, then. Hold on that tile and run it back."
     wait: naruto_run_back_to_training_tile
   - speaker: naruto_uzumaki
     text: "Now you're speaking my language."
@@ -64,7 +64,7 @@ dialogue:
   - speaker: iruka_umino
     text: "A jump can carry you over terrain and obstacles, but once you leave the ground, you are committed. No stopping. No changing direction."
   - speaker: iruka_umino
-    text: "Exactly. Take that far tile again, and do it with a jump."
+    text: "Now you're getting it. Take that far tile again, and do it with a jump."
     wait: naruto_jump_to_far_tile
   - speaker: naruto_uzumaki
     text: "Hah. That's more like it."
@@ -75,7 +75,7 @@ dialogue:
   - speaker: iruka_umino
     text: "Exactly. It is instant and difficult to predict, but it costs chakra, and if you lean on it too hard, you lose awareness of the field around you."
   - speaker: iruka_umino
-    text: "Exactly. Hold the right button and reappear on that training tile."
+    text: "Try it. Hold the right button and reappear on that training tile."
     wait: naruto_teleport_to_training_tile
   - speaker: naruto_uzumaki
     text: "Now that is efficient."
@@ -107,9 +107,9 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "You want me to bend the throw the same way I bent my pathing?"
   - speaker: iruka_umino
-    text: "Exactly. A curved throw is harder to read, and it can slip around something in the lane, but you pay for it in speed."
+    text: "Good. A curved throw is harder to read, and it can slip around something in the lane, but you pay for it in speed."
   - speaker: iruka_umino
-    text: "Exactly. Keep the same target, but roll the wheel and bring the line in from one side."
+    text: "Show me. Keep the same target, but roll the wheel and bring the line in from one side."
   - speaker: iruka_umino
     text: "Use a **short arc** and hit the post to your right."
     wait: naruto_throw_shuriken_short_arc
@@ -120,7 +120,7 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "So this time I switch the family and swing it out before it closes?"
   - speaker: iruka_umino
-    text: "Exactly. Press the wheel down once to change from a `short` arc to a `wide` one."
+    text: "Right. Press the wheel down once to change from a `short` arc to a `wide` one."
   - speaker: iruka_umino
     text: "The wider the throw, the stranger it looks, but the slower it arrives, and the less accurate it becomes."
   - speaker: iruka_umino
@@ -135,7 +135,7 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "So I move first, then throw. Seven shuriken. No excuses."
   - speaker: iruka_umino
-    text: "Exactly. You have `30 seconds`. Watch the count, keep your hands moving, and do not waste a throw."
+    text: "Listen carefully. You have `30 seconds`. Watch the count, keep your hands moving, and do not waste a throw."
   - speaker: naruto_uzumaki
     text: "Hah. Then quit talking and start the clock."
   - speaker: iruka_umino
@@ -152,7 +152,7 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "So I stack the techniques I want before I use them."
   - speaker: iruka_umino
-    text: "Exactly. First, put **Infuse Chakra** into your action chain."
+    text: "Good. First, put **Infuse Chakra** into your action chain."
     wait: naruto_queue_infuse_chakra_jutsu
   - speaker: iruka_umino
     text: "Good. Now queue *Clone Jutsu* after it."
@@ -166,3 +166,24 @@ dialogue:
   - speaker: iruka_umino
     text: "Then stop talking and commit. When your chain is set, click the **checkmark** to execute it."
     wait: naruto_execute_clone_chain
+  - speaker: iruka_umino
+    text: "That is enough embarrassment for one afternoon. Next is *Substitution Jutsu*."
+  - speaker: iruka_umino
+    text: "Start the same way. Queue **Infuse Chakra** again."
+    wait: naruto_queue_infuse_chakra_for_substitution
+  - speaker: naruto_uzumaki
+    text: "Hold on. You're going to throw a shuriken at **me** for this one, aren't you?"
+  - speaker: iruka_umino
+    text: "Yes. Queue **Substitution Jutsu**, then pick the tile where you want to reappear. That destination becomes part of the chain too."
+    wait: naruto_queue_substitution_destination
+  - speaker: naruto_uzumaki
+    text: "You say that like it makes the shuriken part any less awful."
+  - speaker: iruka_umino
+    text: "When the chain is ready, click the **checkmark**. I will throw. If you are serious, you will be gone before it reaches you."
+    wait: naruto_execute_substitution_chain
+  - speaker: naruto_uzumaki
+    text: "That was way too close! You really threw it like you meant it, Iruka-sensei!"
+  - speaker: iruka_umino
+    text: "Do not be dramatic. If I had meant to hit you, we would be having a different conversation."
+  - speaker: naruto_uzumaki
+    text: "Tch. Easy for you to say when the shuriken isn't flying at your face."
