@@ -220,7 +220,28 @@ Original prompt: okay now, the next step is probably making a reusable loading s
  - TODO:
    - manually tune substitution log fall timing/rotation/size in-browser if it feels too floaty or too abrupt
    - decide whether successful substitution should consume/fill chakra bars yet, or whether those bars stay mostly tutorial-display-only for now
-  - removed SVG SMIL animation dependence from the chakra burst and smoke puff effects
+ - Timed challenge handoff fix:
+   - the first timed shuriken target could intermittently feel dead right after movement because the move -> throw transition and final movement completion were both relying on normal async React state updates
+   - imported `flushSync` from `react-dom`
+   - challenge phase changes now flush synchronously when entering `throw`, and final movement completion now flushes the last coord / moving-state update before `on_complete`
+   - this should eliminate the first-event stale-phase window where the first challenge target was still logically in the old phase for one hover/click
+ - Dialogue cleanup:
+   - reduced repeated `Good.` / `Exactly.` phrasing in Iruka's tutorial lines
+   - replaced them with more varied responses like `Well done.`, `Great.`, `Good going, Naruto.`, `Keep it up.`, `All right.`, and `That's more like it.`
+ - Verification:
+   - `npm run build` passes
+   - local inline Playwright smoke run completed against `http://127.0.0.1:4178/index.html`
+   - screenshot: `output/playwright/challenge_transition_smoke.png`
+   - console/page error log: `output/playwright/challenge_transition_smoke_errors.txt` (`no-errors`)
+ - Timed challenge target fallback:
+   - added a tile-level fallback for ranged targets so hovering/clicking the target post's tile behaves the same as hovering/clicking the post itself
+   - this avoids the post hit box being the only valid interaction surface during timed throws
+   - challenge move->throw handoff still uses synchronous state commits, and now the tile under the selected post can directly trigger the same throw logic
+ - Dialogue cleanup follow-up:
+   - removed the remaining `Good.` phrasing from Iruka's tutorial lines
+   - follow-up smoke screenshot: `output/playwright/challenge_transition_smoke_2.png`
+   - follow-up error log: `output/playwright/challenge_transition_smoke_2_errors.txt` (`no-errors`)
+ - removed SVG SMIL animation dependence from the chakra burst and smoke puff effects
   - world effects now render as plain static board shapes for their visible lifetime, which is more reliable in this React/SVG stack
   - build passed with `npm run build`
 - Clone-jutsu cleanup:

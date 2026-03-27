@@ -7,7 +7,7 @@ dialogue:
     text: "Then show me. Walk over there."
     wait: naruto_move_to_center_tile
   - speaker: iruka_umino
-    text: "Good. That is how you move across the field."
+    text: "Well done. That is how you move across the field."
   - speaker: naruto_uzumaki
     text: "See? I told you I knew this already!"
   - speaker: iruka_umino
@@ -25,7 +25,7 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "Same tile. **Different approach.**"
   - speaker: iruka_umino
-    text: "Good. An arc takes longer, but it is less predictable, and it can keep you clear of something sitting in the direct lane."
+    text: "Great. An arc takes longer, but it is less predictable, and it can keep you clear of something sitting in the direct lane."
   - speaker: iruka_umino
     text: "Now prove it. Take that tile again, but this time bring the line in from one side."
     wait: naruto_route_to_training_tile
@@ -92,7 +92,7 @@ dialogue:
     text: "Then prove it. Take the throwing spot."
     wait: naruto_move_to_throw_position
   - speaker: iruka_umino
-    text: "Good. Click the **shuriken** in your inventory."
+    text: "There you go, Naruto. Click the **shuriken** in your inventory."
   - speaker: iruka_umino
     text: "Then hover the post straight ahead. The red line will show you the throw."
   - speaker: iruka_umino
@@ -107,7 +107,7 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "You want me to bend the throw the same way I bent my pathing?"
   - speaker: iruka_umino
-    text: "Good. A curved throw is harder to read, and it can slip around something in the lane, but you pay for it in speed."
+    text: "Well done. A curved throw is harder to read, and it can slip around something in the lane, but you pay for it in speed."
   - speaker: iruka_umino
     text: "Show me. Keep the same target, but roll the wheel and bring the line in from one side."
   - speaker: iruka_umino
@@ -116,7 +116,7 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "Heh. Fine. I'll curve it in."
   - speaker: iruka_umino
-    text: "Good. Now open the throw wider."
+    text: "Keep it up. Now open the throw wider."
   - speaker: naruto_uzumaki
     text: "So this time I switch the family and swing it out before it closes?"
   - speaker: iruka_umino
@@ -129,7 +129,7 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "All right. Let's see you complain about *that* one."
   - speaker: iruka_umino
-    text: "Good. Now we stop drilling one throw at a time."
+    text: "Great job. Now we stop drilling one throw at a time."
   - speaker: iruka_umino
     text: "I am giving you a timed challenge. I will call a tile. Move to it. Only when you reach it will a post light up for your next throw."
   - speaker: naruto_uzumaki
@@ -146,16 +146,16 @@ dialogue:
   - speaker: naruto_uzumaki
     text: "Yeah, yeah. I still made it."
   - speaker: iruka_umino
-    text: "Good. Now open the jutsu panel. That is where your techniques are stored."
+    text: "All right. Now open the jutsu panel. That is where your techniques are stored."
   - speaker: iruka_umino
     text: "And the bar above your inventory is your action chain. When you select a jutsu, it goes there first. It does not resolve on its own."
   - speaker: naruto_uzumaki
     text: "So I stack the techniques I want before I use them."
   - speaker: iruka_umino
-    text: "Good. First, put **Infuse Chakra** into your action chain."
+    text: "Now pay attention. First, put **Infuse Chakra** into your action chain."
     wait: naruto_queue_infuse_chakra_jutsu
   - speaker: iruka_umino
-    text: "Good. Now queue *Clone Jutsu* after it."
+    text: "That's more like it. Now queue *Clone Jutsu* after it."
   - speaker: naruto_uzumaki
     text: "Tch. That stupid jutsu? It never comes out right."
   - speaker: iruka_umino
@@ -187,3 +187,22 @@ dialogue:
     text: "Do not be dramatic. If I had meant to hit you, we would be having a different conversation."
   - speaker: naruto_uzumaki
     text: "Tch. Easy for you to say when the shuriken isn't flying at your face."
+  - speaker: iruka_umino
+    text: "Now for *Transformation Jutsu*. If you cannot even manage a basic transformation, you will embarrass yourself before you ever embarrass an enemy."
+  - speaker: iruka_umino
+    text: "Queue **Infuse Chakra** first."
+    wait: naruto_queue_infuse_chakra_for_transformation
+  - speaker: naruto_uzumaki
+    text: "Yeah, yeah. I know the order already."
+  - speaker: iruka_umino
+    text: "Then queue **Transformation Jutsu** after it."
+    wait: naruto_queue_transformation_jutsu
+  - speaker: naruto_uzumaki
+    text: "Fine. Watch this."
+  - speaker: iruka_umino
+    text: "If your chain is set, click the **checkmark** and transform."
+    wait: naruto_execute_transformation_chain
+  - speaker: naruto_uzumaki
+    text: "Wh- What? Why didn't it change?!"
+  - speaker: iruka_umino
+    text: "Because you are still slacking off. If you keep this up, Naruto, you will never be a ninja."

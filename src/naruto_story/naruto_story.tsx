@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
+import { flushSync } from 'react-dom';
 import { ActionQueueBar } from '../hud/action_queue_bar';
 import { InventoryBar } from '../hud/inventory_bar';
 import { JutsuPanel } from '../hud/jutsu_panel';
@@ -34,6 +35,9 @@ const ready_clone_wait_key = 'naruto_execute_clone_chain';
 const substitution_infuse_wait_key = 'naruto_queue_infuse_chakra_for_substitution';
 const substitution_destination_wait_key = 'naruto_queue_substitution_destination';
 const ready_substitution_wait_key = 'naruto_execute_substitution_chain';
+const transformation_infuse_wait_key = 'naruto_queue_infuse_chakra_for_transformation';
+const transformation_wait_key = 'naruto_queue_transformation_jutsu';
+const ready_transformation_wait_key = 'naruto_execute_transformation_chain';
 const iruka_side_coord: HexCoord = { q: 3, r: -1, s: -2 };
 const path_families: PathFamily[] = ['short', 'wide'];
 const short_family_variants: PathVariant[] = ['shortest', 'left', 'right'];
@@ -66,8 +70,19 @@ const run_loop_sfx_path = '/resources/sfx/run.wav';
 const jump_sfx_path = '/resources/sfx/jump.mp3';
 const handsign_sfx_path = '/resources/sfx/handsign.wav';
 const clone_sfx_path = '/resources/sfx/shadow_clone.mp3';
+const disperse_sfx_path = '/resources/sfx/disperse.mp3';
 const here_vox_path = '/resources/vox/naruto_uzumaki/part_1/here.mp3';
 const here_i_go_vox_path = '/resources/vox/naruto_uzumaki/part_1/here_i_go.mp3';
+const ah_vox_path = '/resources/vox/naruto_uzumaki/part_1/ah.mp3';
+const great_vox_path = '/resources/vox/naruto_uzumaki/part_1/great.mp3';
+const haha_vox_path = '/resources/vox/naruto_uzumaki/part_1/haha.mp3';
+const missed_me_vox_path = '/resources/vox/naruto_uzumaki/part_1/missed_me.mp3';
+const challenge_ten_second_vox_path = '/resources/vox/naruto_uzumaki/part_1/i_wont_lose_no_matter_what.mp3';
+const shuriken_throw_vox_paths = [
+  '/resources/vox/naruto_uzumaki/part_1/hit_1.mp3',
+  '/resources/vox/naruto_uzumaki/part_1/hit_2.mp3',
+  '/resources/vox/naruto_uzumaki/part_1/hit_3.mp3',
+] as const;
 const lucky_me_vox_path = '/resources/vox/naruto_uzumaki/part_1/lucky_me.mp3';
 const infuse_chakra_icon_path = '/resources/jutsu/infuse_chakra.png';
 const clone_jutsu_icon_path = '/resources/jutsu/e_rank/clone_jutsu.png';
@@ -329,6 +344,7 @@ export function NarutoStory() {
   const [override_dialogue_lines, set_override_dialogue_lines] = useState<OverrideDialogueLine[] | null>(null);
   const [override_dialogue_index, set_override_dialogue_index] = useState(0);
   const [transient_dialogue_line, set_transient_dialogue_line] = useState<OverrideDialogueLine | null>(null);
+  const [clear_naruto_pose_on_next_advance, set_clear_naruto_pose_on_next_advance] = useState(false);
   const [error_message, set_error_message] = useState<string | null>(null);
   const override_dialogue_finish_ref = useRef<(() => void) | null>(null);
   const transient_dialogue_timeout_ref = useRef<number | null>(null);
@@ -338,6 +354,7 @@ export function NarutoStory() {
   });
   const countdown_beep_stage_ref = useRef<string | null>(null);
   const danger_beep_step_ref = useRef<number | null>(null);
+  const challenge_ten_second_vox_ref = useRef(false);
   const { play_looping_track, play_stinger } = useMusicController(0.42);
   const { speech_state, advance, fulfill_wait } = use_speech_controller(dialogue_lines);
 
@@ -454,7 +471,10 @@ export function NarutoStory() {
     if (
       speech_state.wait_key === infuse_chakra_wait_key
       || speech_state.wait_key === clone_wait_key
+      || speech_state.wait_key === transformation_infuse_wait_key
+      || speech_state.wait_key === transformation_wait_key
       || active_text.includes('clone jutsu')
+      || active_text.includes('transformation jutsu')
       || active_text.includes('infuse chakra')
       || active_text.includes('jutsu panel')
     ) {
@@ -669,10 +689,16 @@ export function NarutoStory() {
     (speech_state.active_line?.text ?? '').includes('Click the **shuriken** in your inventory.')
     || (speech_state.wait_key === throw_wait_key && selected_inventory_index !== 0);
   const highlighted_jutsu_id =
-    (speech_state.wait_key === infuse_chakra_wait_key || speech_state.wait_key === substitution_infuse_wait_key) && !queued_jutsu_ids.includes('infuse_chakra')
+    (
+      speech_state.wait_key === infuse_chakra_wait_key
+      || speech_state.wait_key === substitution_infuse_wait_key
+      || speech_state.wait_key === transformation_infuse_wait_key
+    ) && !queued_jutsu_ids.includes('infuse_chakra')
       ? 'infuse_chakra'
       : speech_state.wait_key === clone_wait_key && !queued_jutsu_ids.includes('clone')
         ? 'clone'
+        : speech_state.wait_key === transformation_wait_key && !queued_jutsu_ids.includes('transformation')
+          ? 'transformation'
         : speech_state.wait_key === substitution_destination_wait_key && !queued_jutsu_ids.includes('substitution')
           ? 'substitution'
         : null;
@@ -683,8 +709,15 @@ export function NarutoStory() {
     queued_jutsu_ids[0] === 'infuse_chakra' &&
     queued_jutsu_ids[1] === 'substitution' &&
     Boolean(substitution_destination_tile);
+  const is_transformation_chain_valid =
+    queued_jutsu_ids[0] === 'infuse_chakra' &&
+    queued_jutsu_ids[1] === 'transformation';
   const should_highlight_ready_check =
-    (speech_state.wait_key === ready_clone_wait_key || speech_state.wait_key === ready_substitution_wait_key) &&
+    (
+      speech_state.wait_key === ready_clone_wait_key
+      || speech_state.wait_key === ready_substitution_wait_key
+      || speech_state.wait_key === ready_transformation_wait_key
+    ) &&
     !speech_state.is_wait_satisfied;
   const naruto_status_panel = useMemo(() => {
     const naruto = base_naruto_character;
@@ -804,10 +837,18 @@ export function NarutoStory() {
       challenge_timer_remaining === null
     ) {
       danger_beep_step_ref.current = null;
+      challenge_ten_second_vox_ref.current = false;
       return;
     }
 
     const seconds_remaining = Math.ceil(challenge_timer_remaining / 1000);
+    if (seconds_remaining > 10) {
+      challenge_ten_second_vox_ref.current = false;
+    } else if (!challenge_ten_second_vox_ref.current) {
+      challenge_ten_second_vox_ref.current = true;
+      play_vox(challenge_ten_second_vox_path, 0.92);
+    }
+
     if (seconds_remaining > 5 || seconds_remaining < 2) {
       return;
     }
@@ -1156,6 +1197,28 @@ export function NarutoStory() {
     return !substitution_blocked_tile_keys.has(key_hex(coord));
   }
 
+  function get_tile_targeted_prop(coord: HexCoord) {
+    if (
+      is_challenge_active &&
+      challenge_state.phase === 'throw' &&
+      challenge_target_prop &&
+      key_hex(challenge_target_prop.coord) === key_hex(coord)
+    ) {
+      return challenge_target_prop;
+    }
+
+    if (
+      active_throw_objective &&
+      active_target_prop &&
+      !speech_state.is_wait_satisfied &&
+      key_hex(active_target_prop.coord) === key_hex(coord)
+    ) {
+      return active_target_prop;
+    }
+
+    return null;
+  }
+
   const animate_projectile_along_world_path = (
     world_path: WorldPoint[],
     options: {
@@ -1318,7 +1381,7 @@ export function NarutoStory() {
           offset_z: 1.02,
           duration_ms: 900,
         });
-        play_sfx(clone_sfx_path, 0.78);
+        play_sfx(disperse_sfx_path, 0.78);
         set_temporary_failed_clone(null);
         set_is_executing_jutsu_chain(false);
         fulfill_wait(ready_clone_wait_key);
@@ -1371,6 +1434,7 @@ export function NarutoStory() {
     set_naruto_jutsu_pose(null);
 
     showTransientDialogue({ speaker: 'naruto_uzumaki', text: 'Yikes!' }, 920);
+    play_vox(ah_vox_path, 0.96);
     play_sfx(projectile_throw_sfx_path, 0.72);
     await animate_projectile_along_world_path(throw_world_path, {
       sprite: shuriken_icon_path,
@@ -1381,6 +1445,7 @@ export function NarutoStory() {
     });
 
     play_sfx(projectile_hit_sfx_path, 0.74);
+    play_sfx(disperse_sfx_path, 0.8);
     spawn_world_effect('smoke_puff', naruto_current_coord, {
       size_m: 1.68,
       offset_z: 1.08,
@@ -1398,6 +1463,8 @@ export function NarutoStory() {
     set_character_coord_override(set_character_coord_overrides, naruto_character_id, substitution_destination_tile);
     set_character_facing_override(set_character_facing_overrides, naruto_character_id, facing_after_reappear);
     set_hidden_character_ids({});
+    play_sfx(disperse_sfx_path, 0.78);
+    play_vox(missed_me_vox_path, 0.94);
     spawn_world_effect('smoke_puff', substitution_destination_tile, {
       size_m: 1.52,
       offset_z: 1.04,
@@ -1407,6 +1474,44 @@ export function NarutoStory() {
     set_queued_jutsu_ids([]);
     set_is_executing_jutsu_chain(false);
     fulfill_wait(ready_substitution_wait_key);
+  };
+
+  const execute_transformation_chain = async () => {
+    if (
+      !naruto_current_coord ||
+      speech_state.wait_key !== ready_transformation_wait_key ||
+      speech_state.is_wait_satisfied ||
+      !is_transformation_chain_valid ||
+      is_executing_jutsu_chain
+    ) {
+      return;
+    }
+
+    set_is_executing_jutsu_chain(true);
+    set_hovered_destination_tile(null);
+    set_hovered_target_prop_id(null);
+    set_selected_inventory_index(null);
+
+    play_sfx(handsign_sfx_path, 0.76);
+    spawn_world_effect('chakra_burst', naruto_current_coord, {
+      size_m: 2.24,
+      offset_z: 0.96,
+      duration_ms: 960,
+    });
+    set_naruto_jutsu_pose('infuse');
+    await delay_ms(760);
+
+    spawn_world_effect('smoke_puff', naruto_current_coord, {
+      size_m: 1.58,
+      offset_z: 1.04,
+      duration_ms: 920,
+    });
+    play_vox(haha_vox_path, 0.92);
+    play_sfx(disperse_sfx_path, 0.78);
+    set_queued_jutsu_ids([]);
+    set_clear_naruto_pose_on_next_advance(true);
+    set_is_executing_jutsu_chain(false);
+    fulfill_wait(ready_transformation_wait_key);
   };
 
   function handleChallengeFailure() {
@@ -1445,15 +1550,17 @@ export function NarutoStory() {
       return;
     }
 
-    set_hovered_destination_tile(null);
-    set_hovered_target_prop_id(null);
-    set_active_path_family('short');
-    set_active_path_variant('shortest');
-    set_challenge_state((current) => ({
-      ...current,
-      phase: 'throw',
-      target_prop_id: target_post.id,
-    }));
+    flushSync(() => {
+      set_hovered_destination_tile(null);
+      set_hovered_target_prop_id(target_post.id);
+      set_active_path_family('short');
+      set_active_path_variant('shortest');
+      set_challenge_state((current) => ({
+        ...current,
+        phase: 'throw',
+        target_prop_id: target_post.id,
+      }));
+    });
   }
 
   function handleChallengeThrowComplete() {
@@ -1462,9 +1569,11 @@ export function NarutoStory() {
     }
 
     const next_destination_tile = pickChallengeDestination();
-    set_hovered_target_prop_id(null);
-    set_active_path_family('short');
-    set_active_path_variant('shortest');
+    flushSync(() => {
+      set_hovered_target_prop_id(null);
+      set_active_path_family('short');
+      set_active_path_variant('shortest');
+    });
 
     if (!next_destination_tile && challenge_state.round_index + 1 < challenge_round_count) {
       fulfill_wait(challenge_wait_key);
@@ -1571,7 +1680,10 @@ export function NarutoStory() {
         set_character_coord_override(set_character_coord_overrides, character_id, to_coord);
 
         if (segment_index + 1 >= path.length - 1) {
-          set_character_moving(set_moving_characters, character_id, false);
+          flushSync(() => {
+            set_character_coord_override(set_character_coord_overrides, character_id, to_coord);
+            set_character_moving(set_moving_characters, character_id, false);
+          });
           stop_looping_sfx(movement_loop_key);
           on_complete();
           return;
@@ -1598,12 +1710,17 @@ export function NarutoStory() {
 
     set_character_moving(set_moving_characters, character_id, true);
     stop_looping_sfx(`${movement_loop_sfx_key}:${character_id}`);
+    if (character_id === naruto_character_id) {
+      play_sfx(jump_sfx_path, 0.72);
+    }
     set_character_facing_override(set_character_facing_overrides, character_id, get_facing_for_step(current_coord, coord));
     set_character_world_override(set_character_world_overrides, character_id, null);
-    set_character_coord_override(set_character_coord_overrides, character_id, coord);
+    flushSync(() => {
+      set_character_coord_override(set_character_coord_overrides, character_id, coord);
+      set_character_moving(set_moving_characters, character_id, false);
+    });
 
     window.setTimeout(() => {
-      set_character_moving(set_moving_characters, character_id, false);
       on_complete();
     }, 80);
   };
@@ -1619,6 +1736,8 @@ export function NarutoStory() {
 
     if (resolved_wait_key === move_wait_key) {
       play_vox(here_vox_path, 0.92);
+    } else if (resolved_wait_key === run_wait_key || resolved_wait_key === teleport_wait_key) {
+      play_vox(great_vox_path, 0.92);
     }
 
     fulfill_wait(resolved_wait_key);
@@ -1750,6 +1869,50 @@ export function NarutoStory() {
       return;
     }
 
+    const tile_target_prop = get_tile_targeted_prop(coord);
+    if (tile_target_prop && selected_inventory_item?.icon === shuriken_icon_path && naruto_current_coord) {
+      if (
+        is_challenge_active &&
+        challenge_state.phase === 'throw' &&
+        tile_target_prop.id === challenge_state.target_prop_id
+      ) {
+        const throw_path =
+          active_preview_path && active_preview_path.length >= 2
+            ? active_preview_path
+            : [naruto_current_coord, tile_target_prop.coord];
+
+        throw_shuriken_at_prop(tile_target_prop, throw_path, handleChallengeThrowComplete);
+        return;
+      }
+
+      if (
+        active_throw_objective &&
+        !speech_state.is_wait_satisfied &&
+        tile_target_prop.id === active_throw_objective.target_prop_id
+      ) {
+        const family_matches = active_throw_objective.required_family
+          ? active_path_family === active_throw_objective.required_family
+          : true;
+        const variant_matches = active_throw_objective.required_variants
+          ? active_throw_objective.required_variants.includes(active_path_variant)
+          : true;
+
+        if (!family_matches || !variant_matches) {
+          return;
+        }
+
+        const throw_path =
+          active_preview_path && active_preview_path.length >= 2
+            ? active_preview_path
+            : [naruto_current_coord, tile_target_prop.coord];
+
+        throw_shuriken_at_prop(tile_target_prop, throw_path, () => {
+          fulfill_wait(speech_state.wait_key ?? throw_wait_key);
+        });
+        return;
+      }
+    }
+
     attempt_move(coord, 'click');
   };
 
@@ -1781,6 +1944,22 @@ export function NarutoStory() {
 
       set_hovered_destination_tile(coord);
       return;
+    }
+
+    if (
+      coord &&
+      selected_inventory_item?.icon === shuriken_icon_path
+    ) {
+      const tile_target_prop = get_tile_targeted_prop(coord);
+      if (tile_target_prop && naruto_current_coord) {
+        set_hovered_target_prop_id(tile_target_prop.id);
+        set_hovered_destination_tile(null);
+        set_character_facing_overrides((current) => ({
+          ...current,
+          [naruto_character_id]: get_facing_for_step(naruto_current_coord, tile_target_prop.coord),
+        }));
+        return;
+      }
     }
 
     if (
@@ -2164,9 +2343,13 @@ export function NarutoStory() {
     const duration_ms = 180;
     const start_time = window.performance.now();
     const projectile_id = `shuriken:${Date.now()}`;
+    const throw_vox_path =
+      shuriken_throw_vox_paths[Math.floor(Math.random() * shuriken_throw_vox_paths.length)] ??
+      shuriken_throw_vox_paths[0];
 
     set_hovered_target_prop_id(null);
     play_sfx(projectile_throw_sfx_path, 0.72);
+    play_vox(throw_vox_path, 0.9);
 
     const animate_throw = (now: number) => {
       const progress = Math.min(1, Math.max(0, (now - start_time) / duration_ms));
@@ -2309,6 +2492,11 @@ export function NarutoStory() {
       return;
     }
 
+    if (clear_naruto_pose_on_next_advance) {
+      set_clear_naruto_pose_on_next_advance(false);
+      set_naruto_jutsu_pose(null);
+    }
+
     advance();
   };
 
@@ -2332,7 +2520,11 @@ export function NarutoStory() {
 
     if (
       typed_jutsu_id === 'infuse_chakra' &&
-      (speech_state.wait_key === infuse_chakra_wait_key || speech_state.wait_key === substitution_infuse_wait_key)
+      (
+        speech_state.wait_key === infuse_chakra_wait_key
+        || speech_state.wait_key === substitution_infuse_wait_key
+        || speech_state.wait_key === transformation_infuse_wait_key
+      )
     ) {
       const wait_key = speech_state.wait_key;
       if (wait_key) {
@@ -2343,6 +2535,11 @@ export function NarutoStory() {
 
     if (typed_jutsu_id === 'clone' && speech_state.wait_key === clone_wait_key) {
       fulfill_wait(clone_wait_key);
+      return;
+    }
+
+    if (typed_jutsu_id === 'transformation' && speech_state.wait_key === transformation_wait_key) {
+      fulfill_wait(transformation_wait_key);
     }
   };
   const challenge_overlay_text = useMemo(() => {
@@ -2464,6 +2661,8 @@ export function NarutoStory() {
                       ? is_clone_chain_valid
                       : speech_state.wait_key === ready_substitution_wait_key
                         ? is_substitution_chain_valid
+                        : speech_state.wait_key === ready_transformation_wait_key
+                          ? is_transformation_chain_valid
                         : queued_action_slots.some(Boolean)
                   )
                 }
@@ -2471,6 +2670,11 @@ export function NarutoStory() {
                 on_ready={() => {
                   if (speech_state.wait_key === ready_substitution_wait_key) {
                     void execute_substitution_chain();
+                    return;
+                  }
+
+                  if (speech_state.wait_key === ready_transformation_wait_key) {
+                    void execute_transformation_chain();
                     return;
                   }
 
