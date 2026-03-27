@@ -10,7 +10,7 @@ const storage_key = 'shinobi-tactics-audio-settings';
 const default_audio_settings: AudioSettings = {
   music_volume: 50,
   sfx_volume: 100,
-  vox_volume: 70,
+  vox_volume: 60,
 };
 
 const subscribers = new Set<() => void>();
