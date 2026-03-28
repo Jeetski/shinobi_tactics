@@ -2,6 +2,7 @@ node_modules/
 dist/
 /resources/
 /output/playwright/
+/META/
 *.tsbuildinfo
 .DS_Store
 Thumbs.db
